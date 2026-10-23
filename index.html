@@ -788,18 +788,33 @@ function generarIdAsignacion(){
  if(window.crypto&&typeof window.crypto.randomUUID==='function')return window.crypto.randomUUID();
  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return (c==='x'?r:(r&0x3|0x8)).toString(16)});
 }
-async function solicitarRecordatorioWhatsApp(asignacionId){
- try{
-  const {data,error}=await db.auth.getSession();
-  if(error||!data?.session?.access_token)return {ok:false,message:'No se encontró una sesión activa para solicitar el WhatsApp.'};
-  const response=await fetch('/.netlify/functions/whatsapp-asignacion',{
-   method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+data.session.access_token},
-   body:JSON.stringify({asignacion_id:asignacionId})
-  });
-  let result={};try{result=await response.json()}catch(_){}
-  if(!response.ok)return {ok:false,message:result.error||'No se pudo enviar el recordatorio por WhatsApp.'};
-  return {ok:true,message:result.message||'Recordatorio enviado por WhatsApp.'};
- }catch(err){console.error('Error solicitando recordatorio WhatsApp:',err);return {ok:false,message:'La asignación se guardó, pero no se pudo contactar el servicio de WhatsApp.'}}
+function normalizarTelefonoWhatsApp(telefono){
+ const digitos=String(telefono||'').replace(/\D/g,'');
+ if(!digitos)return '';
+ // Colombia: si se guardó el celular nacional de 10 dígitos, anteponer 57.
+ if(digitos.length===10 && digitos.startsWith('3'))return '57'+digitos;
+ // Si ya viene con código de país, conservarlo.
+ if(digitos.length>=11 && digitos.length<=15)return digitos;
+ return '';
+}
+function crearEnlaceWhatsApp(asignacion, persona){
+ const telefono=normalizarTelefonoWhatsApp(persona?.telefono);
+ if(!telefono)return {ok:false,message:'El conferenciante no tiene un teléfono válido. Registra el celular con indicativo de país o un celular colombiano de 10 dígitos.'};
+ if(persona?.whatsapp_autorizado!==true)return {ok:false,message:'El conferenciante no tiene marcada la autorización para recibir recordatorios por WhatsApp. Actualiza su registro si ya dio su consentimiento.'};
+ const fecha=asignacion.fecha?new Date(asignacion.fecha+'T12:00:00').toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'}):'Sin fecha';
+ const bosquejo=[asignacion.numero_bosquejo,asignacion.nombre_bosquejo].filter(Boolean).join(' - ')||'No especificado';
+ const mensaje=[
+  'Hola '+(persona.nombre||asignacion.conferenciante_nombre||'')+', te compartimos el recordatorio de tu asignación de conferencia.',
+  '',
+  '📅 Fecha: '+fecha,
+  '🏠 Congregación: '+(asignacion.congregacion||'Arrayanes'),
+  '📖 Bosquejo: '+bosquejo,
+  '🎵 Canción: '+(asignacion.cancion||'No especificada'),
+  asignacion.notas?'📝 Nota: '+asignacion.notas:'',
+  '',
+  'Por favor, confirma la información. ¡Muchas gracias!'
+ ].filter(Boolean).join('\n');
+ return {ok:true,url:'https://wa.me/'+telefono+'?text='+encodeURIComponent(mensaje)};
 }
 $('formAsignacion').addEventListener('submit',async e=>{
  e.preventDefault();
@@ -813,17 +828,36 @@ $('formAsignacion').addEventListener('submit',async e=>{
  const duplicada=asignaciones.find(a=>String(a.conferenciante_id)===asignacion.conferenciante_id&&a.fecha===fecha&&a.estado!=='Cancelada'&&asignacion.estado!=='Cancelada');
  if(duplicada&&!confirm(`Este conferenciante ya tiene una asignación para ${fecha}. ¿Deseas guardar otra de todas formas?`))return;
  const boton=$('formAsignacion').querySelector('button[type="submit"]');
- if(boton?.disabled)return;if(boton){boton.disabled=true;boton.dataset.originalText=boton.textContent;boton.textContent='Guardando…'}
+ if(boton?.disabled)return;
+ // Abrir la pestaña en el gesto del usuario para evitar que el navegador bloquee el popup tras guardar.
+ let pestanaWhatsApp=null;
+ if(asignacion.estado!=='Cancelada'){
+  try{pestanaWhatsApp=window.open('about:blank','_blank');if(pestanaWhatsApp)pestanaWhatsApp.opener=null;}catch(_){pestanaWhatsApp=null;}
+ }
+ if(boton){boton.disabled=true;boton.dataset.originalText=boton.textContent;boton.textContent='Guardando…'}
  try{
   const res=await db.from('asignaciones').insert(asignacion);
   if(await persistirError(res)){
-   limpiarFormularioAsignacion();await cargarDatos();
-   if(asignacion.estado==='Cancelada'){alert('Asignación guardada. No se envió WhatsApp porque la asignación está cancelada.');return}
-   const aviso=await solicitarRecordatorioWhatsApp(asignacion.id);
-   if(aviso.ok)alert('Asignación guardada correctamente. '+aviso.message);
-   else alert('La asignación se guardó correctamente, pero el recordatorio por WhatsApp no se envió. '+aviso.message+' Revisa la configuración de WhatsApp y el teléfono/consentimiento del conferenciante.');
-  }
- }catch(err){console.error('Error guardando asignación:',err);alert('No se pudo completar el guardado de la asignación. Revisa la conexión e inténtalo de nuevo.')}finally{if(boton){boton.disabled=false;boton.textContent=boton.dataset.originalText||'＋ Guardar asignación'}}
+   await cargarDatos();
+   if(asignacion.estado==='Cancelada'){
+    if(pestanaWhatsApp&&!pestanaWhatsApp.closed)pestanaWhatsApp.close();
+    limpiarFormularioAsignacion();alert('Asignación guardada. No se abrió WhatsApp porque la asignación está cancelada.');return;
+   }
+   const enlace=crearEnlaceWhatsApp(asignacion,persona);
+   limpiarFormularioAsignacion();
+   if(enlace.ok){
+    if(pestanaWhatsApp&&!pestanaWhatsApp.closed){pestanaWhatsApp.location.href=enlace.url;}
+    else {alert('La asignación se guardó, pero el navegador bloqueó la nueva pestaña. Pulsa Aceptar para abrir WhatsApp.');window.location.href=enlace.url;return;}
+    alert('Asignación guardada correctamente. Se abrió WhatsApp con el mensaje listo para revisar y enviar. Recuerda pulsar Enviar en WhatsApp.');
+   }else{
+    if(pestanaWhatsApp&&!pestanaWhatsApp.closed)pestanaWhatsApp.close();
+    alert('La asignación se guardó correctamente, pero no se pudo preparar WhatsApp. '+enlace.message);
+   }
+  }else if(pestanaWhatsApp&&!pestanaWhatsApp.closed){pestanaWhatsApp.close();}
+ }catch(err){
+  if(pestanaWhatsApp&&!pestanaWhatsApp.closed)pestanaWhatsApp.close();
+  console.error('Error guardando asignación:',err);alert('No se pudo completar el guardado de la asignación. Revisa la conexión e inténtalo de nuevo.');
+ }finally{if(boton){boton.disabled=false;boton.textContent=boton.dataset.originalText||'＋ Guardar asignación'}}
 });
 $('buscarAsignacion').addEventListener('input',renderizarAsignaciones);
 $('filtroPersonaHistorial').addEventListener('change',()=>{
