@@ -613,8 +613,8 @@ function ordenar(a, campo='numero'){
   return compararTexto(x[campo],y[campo]) || compararTexto(x.numero,y.numero);
  });
 }
-function buscarBosquejo(n){return bosquejos.find(b=>String(b.numero).trim().toLowerCase()===String(n).trim().toLowerCase())}
-function buscarCancion(n){return canciones.find(c=>String(c.numero).trim().toLowerCase()===String(n).trim().toLowerCase())||canciones.find(c=>String(c.nombre).trim().toLowerCase()===String(n).trim().toLowerCase())}
+function buscarBosquejo(n){const v=String(n||'').trim().toLowerCase();const primero=v.split(' - ')[0].trim();return bosquejos.find(b=>String(b.numero).trim().toLowerCase()===v||String(b.numero).trim().toLowerCase()===primero)||bosquejos.find(b=>String(b.nombre||'').trim().toLowerCase()===v)}
+function buscarCancion(n){const v=String(n||'').trim().toLowerCase();const primero=v.split(' - ')[0].trim();return canciones.find(c=>String(c.numero).trim().toLowerCase()===v||String(c.numero).trim().toLowerCase()===primero)||canciones.find(c=>String(c.nombre).trim().toLowerCase()===v)}
 async function cargarDatos(){
  const [r,b,c]=await Promise.all([db.from('conferenciantes').select('*').order('nombre'),db.from('bosquejos').select('*'),db.from('canciones').select('*')]);
  const err=r.error||b.error||c.error;if(err){console.error(err);alert('No se pudieron cargar los datos compartidos. Verifica las tablas y permisos de Supabase. Detalle: '+err.message);return}
@@ -769,8 +769,8 @@ $('formAsignacion').addEventListener('submit',async e=>{
  if(!asignacionesDisponible){alert('Primero debes crear la tabla «asignaciones» en Supabase. Consulta Configuracion_asignaciones_Arrayanes.sql.');return}
  const persona=registros.find(r=>String(r.id)===$('asigConferenciante').value);
  if(!persona){alert('Selecciona un conferenciante registrado.');return}
- const fecha=$('asigFecha').value, numero=$('asigNumero').value.trim(), cancionEntrada=$('asigCancion').value.trim();
- const b=buscarBosquejo(numero), c=buscarCancion(cancionEntrada);
+ const fecha=$('asigFecha').value, entradaBosquejo=$('asigNumero').value.trim(), cancionEntrada=$('asigCancion').value.trim();
+ const b=buscarBosquejo(entradaBosquejo), c=buscarCancion(cancionEntrada), numero=b?String(b.numero):entradaBosquejo;
  const asignacion={id:generarIdAsignacion(),conferenciante_id:String(persona.id),conferenciante_nombre:persona.nombre||'',fecha,numero_bosquejo:numero,nombre_bosquejo:b?b.nombre:'',cancion:c?`${c.numero} - ${c.nombre}`:cancionEntrada,estado:$('asigEstado').value,notas:$('asigNotas').value.trim()};
  const duplicada=asignaciones.find(a=>String(a.conferenciante_id)===asignacion.conferenciante_id&&a.fecha===fecha&&a.estado!=='Cancelada'&&asignacion.estado!=='Cancelada');
  if(duplicada&&!confirm(`Este conferenciante ya tiene una asignación para ${fecha}. ¿Deseas guardar otra de todas formas?`))return;
@@ -794,10 +794,33 @@ $('filtroPersonaHistorial').addEventListener('change',()=>{
  $('asigConferenciante').value=persona?String(persona.id):'';
  renderizarAsignaciones();
 });
+function mostrarNombreBosquejoAsignacion(){
+ const campo=$('asigNumero'); if(!campo)return;
+ const b=buscarBosquejo(campo.value); if(b)campo.value=`${b.numero} - ${b.nombre}`;
+}
+function mostrarNombreCancionAsignacion(){
+ const campo=$('asigCancion'); if(!campo)return;
+ const c=buscarCancion(campo.value); if(c)campo.value=`${c.numero} - ${c.nombre}`;
+}
+$('asigNumero').addEventListener('change',mostrarNombreBosquejoAsignacion);
+$('asigNumero').addEventListener('input',()=>{const b=buscarBosquejo($('asigNumero').value); if(b && $('asigNumero').value.trim()===String(b.numero).trim()) $('asigNumero').value=`${b.numero} - ${b.nombre}`;});
+$('asigCancion').addEventListener('change',mostrarNombreCancionAsignacion);
 $('asigConferenciante').addEventListener('change',()=>{
  const id=$('asigConferenciante').value;
  const persona=id?registros.find(r=>String(r.id)===String(id)):null;
  $('filtroPersonaHistorial').value=persona?normalizarDuplicado(persona.nombre):'';
+ if(persona){
+  // Mostrar en el formulario el bosquejo y la canción registrados para esa persona.
+  const asignacionesPersona=asignaciones.filter(a=>String(a.conferenciante_id)===String(persona.id)||normalizarDuplicado(a.conferenciante_nombre)===normalizarDuplicado(persona.nombre)).sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
+  const ultima=asignacionesPersona.find(a=>a.estado!=='Cancelada');
+  const numero=String(ultima?.numero_bosquejo||persona.numero||'').trim();
+  const nombreBosquejo=String(ultima?.nombre_bosquejo||persona.bosquejo||'').trim();
+  const cancion=String(ultima?.cancion||persona.cancion||'').trim();
+  const b=buscarBosquejo(numero)||buscarBosquejo(nombreBosquejo);
+  $('asigNumero').value=numero?(b?`${b.numero} - ${b.nombre}`:(nombreBosquejo?`${numero} - ${nombreBosquejo}`:numero)):'';
+  const c=buscarCancion(cancion);
+  $('asigCancion').value=c?`${c.numero} - ${c.nombre}`:cancion;
+ }else{$('asigNumero').value='';$('asigCancion').value=''}
  renderizarAsignaciones();
 });
 $('filtroEstadoAsignacion').addEventListener('change',renderizarAsignaciones);
