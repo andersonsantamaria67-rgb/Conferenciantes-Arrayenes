@@ -67,6 +67,7 @@ td{line-height:1.45}
 .login-card .field label{font-size:13px;color:#284b3b}
 .login-card .field input{width:100%;min-height:47px}
 .login-submit{width:100%;min-height:47px;margin-top:5px}
+.passkey-login{width:100%;min-height:45px;margin-top:10px;background:#fff;color:#174b38;border:1px solid #b8d3c4;border-radius:12px;font-weight:650;cursor:pointer}.passkey-login:hover{background:#f0f7f2}.passkey-help{font-size:12px;color:#66796e;line-height:1.5;margin:10px 0 0}.passkey-setup-btn{border:1px solid #ffffff70;background:#ffffff18;color:#fff;border-radius:10px;padding:10px 13px;cursor:pointer}.passkey-setup-btn:hover{background:#ffffff2b}@media(max-width:600px){.passkey-setup-btn{padding:8px 10px}}
 .login-message{font-size:13px;line-height:1.5;color:#a52e2e;margin:12px 0 0;min-height:18px}
 .login-foot{font-size:11px;color:#87968d;text-align:center;margin-top:23px}
 body:not(.authenticated) > header,body:not(.authenticated) > main,body:not(.authenticated) > footer,body:not(.authenticated) > dialog{display:none!important}
@@ -474,7 +475,7 @@ dialog{max-height:calc(100dvh - 24px);overscroll-behavior:contain}
   .nav-links a { padding: 7px !important; font-size: 10px !important; }
   .logout-btn { min-width: 138px; }
 }
-</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0"></script><script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <style>
 /* Historial: selector sin nombres repetidos y resumen por persona */
 .history-person-summary{margin:14px 0;padding:16px;border:1px solid #dce9e2;border-radius:14px;background:#f7fbf8}
@@ -493,9 +494,11 @@ dialog{max-height:calc(100dvh - 24px);overscroll-behavior:contain}
   <p class="eyebrow" style="color:#438064;margin-bottom:8px">Congregación</p>
   <h1>ARRAYANES</h1>
   <p class="login-subtitle">Ingresa con tu cuenta autorizada para acceder al directorio de conferencias y sus registros.</p>
-  <div class="field"><label for="loginEmail">Correo electrónico</label><input id="loginEmail" type="email" autocomplete="username" required maxlength="254" placeholder="tu correo autorizado"></div>
+  <div class="field"><label for="loginEmail">Correo electrónico</label><input id="loginEmail" type="email" autocomplete="username webauthn" required maxlength="254" placeholder="tu correo autorizado"></div>
   <div class="field"><label for="loginPassword">Contraseña</label><input id="loginPassword" type="password" autocomplete="current-password" required maxlength="256" placeholder="Tu contraseña"></div>
-  <button class="primary login-submit" id="loginSubmit" type="submit">Ingresar de forma segura</button>
+  <button class="primary login-submit" id="loginSubmit" type="submit">Ingresar con correo y contraseña</button>
+  <button class="passkey-login" id="passkeyLogin" type="button">⌁ Ingresar con llave de acceso</button>
+  <p class="passkey-help">Puedes usar una llave de acceso guardada en este dispositivo o en tu administrador de contraseñas. Para usarla por primera vez, primero inicia sesión con tu contraseña y crea la llave desde la aplicación.</p>
   <p class="login-message" id="loginMessage" role="alert" aria-live="polite"></p>
   <p class="login-foot">Acceso restringido · Congregación Arrayanes</p>
  </form>
@@ -506,7 +509,7 @@ dialog{max-height:calc(100dvh - 24px);overscroll-behavior:contain}
  <div class="nav-links"><a href="#inicio">⌂ Inicio</a><a href="#directorio">Conferencias</a><a href="#catalogos">Bosquejos</a><a href="#catalogos">Canciones</a><a href="#panelAsignaciones">Calendario y asignaciones</a></div>
  <div class="nav-secure"><span>●</span> Sesión protegida</div>
 </nav>
-<div class="hero-inner" id="inicio"><div class="hero-banner-copy"><div class="verse">“Presta constante atención a tu conducta y a tu enseñanza.<br>No dejes de hacer estas cosas, pues así te salvarás a ti mismo y también a los que te escuchan.”<small>1 Timoteo 4:16</small></div></div><div class="auth-bar"><span class="auth-user" id="authUserLabel" title="Cuenta autorizada"><span class="auth-avatar" aria-hidden="true">♙</span><span class="auth-user-label">Usuario autorizado<small>Acceso protegido</small></span></span><button class="logout-btn" type="button" onclick="cerrarSesion()">↪ Cerrar sesión</button></div></div></header>
+<div class="hero-inner" id="inicio"><div class="hero-banner-copy"><div class="verse">“Presta constante atención a tu conducta y a tu enseñanza.<br>No dejes de hacer estas cosas, pues así te salvarás a ti mismo y también a los que te escuchan.”<small>1 Timoteo 4:16</small></div></div><div class="auth-bar"><span class="auth-user" id="authUserLabel" title="Cuenta autorizada"><span class="auth-avatar" aria-hidden="true">♙</span><span class="auth-user-label">Usuario autorizado<small>Acceso protegido</small></span></span><button class="passkey-setup-btn" id="registerPasskeyBtn" type="button" onclick="registrarLlaveAcceso()">⌁ Crear llave de acceso</button><button class="logout-btn" type="button" onclick="cerrarSesion()">↪ Cerrar sesión</button></div></div></header>
 <main>
 <section class="top-grid">
 <div class="stat"><div class="stat-icon">♙</div><div><div class="stat-label">Total de conferenciantes</div><div class="stat-value" id="total">0</div></div></div>
@@ -562,6 +565,7 @@ dialog{max-height:calc(100dvh - 24px);overscroll-behavior:contain}
 <div class="catalog-box"><h3>♫ Agregar canción</h3><form id="formCancion" class="inline-form"><input id="nuevoNumeroCancion" required placeholder="N.º" aria-label="Número de canción"><input id="nuevoNombreCancion" required placeholder="Nombre de la canción" aria-label="Nombre de la canción"><button class="primary" type="submit">＋</button></form><div class="table-wrap"><table class="mini-table"><thead><tr><th>N.º</th><th>Nombre</th><th></th></tr></thead><tbody id="adminCanciones"></tbody></table></div></div>
 </div><div class="form-actions" style="margin-top:15px"><button class="primary" type="button" onclick="cerrarCatalogos()">Listo</button></div></div></dialog>
 <script>
+// Supabase JS 2.105.0+: versión mínima documentada para passkeys.
 // PASO DE CONFIGURACIÓN: reemplaza estos dos valores por los de tu proyecto Supabase.
 const SUPABASE_URL = 'https://welsrjobsuechueptvkz.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_Rt1QMpm60G9RjqzJSi9mEQ_pEr7I8Aw';
@@ -570,6 +574,30 @@ let db=null, usuario=null, registros=[], bosquejos=[], canciones=[], canal=null,
 let paginaDirectorio=1; const filasPorPagina=5;
 const configurado=SUPABASE_URL.startsWith('https://') && (SUPABASE_ANON_KEY.startsWith('eyJ') || SUPABASE_ANON_KEY.startsWith('sb_publishable_')) && !SUPABASE_URL.includes('PEGA_AQUI') && !SUPABASE_ANON_KEY.includes('PEGA_AQUI');
 function mensajeLogin(t){$('loginMessage').textContent=t}
+// Solo se recuerda el correo; nunca se guarda la contraseña en localStorage ni en el HTML.
+const EMAIL_REMEMBER_KEY='arrayanes_login_email_v1';
+try { const correoGuardado=localStorage.getItem(EMAIL_REMEMBER_KEY); if(correoGuardado && $('loginEmail')) $('loginEmail').value=correoGuardado; } catch(_) {}
+function recordarCorreoLogin(){ try { const correo=$('loginEmail').value.trim(); if(correo) localStorage.setItem(EMAIL_REMEMBER_KEY,correo); else localStorage.removeItem(EMAIL_REMEMBER_KEY); } catch(_) {} }
+$('loginEmail').addEventListener('input',recordarCorreoLogin);
+$('loginEmail').addEventListener('change',recordarCorreoLogin);
+function explicarErrorPasskey(err){
+ const codigo=String(err?.code||err?.error_code||'');
+ if(codigo==='passkey_disabled') return 'Las llaves de acceso aún no están activadas en Supabase. El administrador debe habilitarlas en Authentication → Passkeys.';
+ if(/NotAllowedError|AbortError/i.test(String(err?.name||''))) return 'No se completó la verificación de la llave. Inténtalo de nuevo o usa correo y contraseña.';
+ if(/not supported|unsupported/i.test(String(err?.message||''))) return 'Este navegador o dispositivo no admite llaves de acceso. Usa correo y contraseña.';
+ return 'No se pudo completar la operación con la llave de acceso. Verifica la configuración de Supabase e inténtalo de nuevo.';
+}
+async function registrarLlaveAcceso(){
+ if(!db || !usuario){alert('Primero inicia sesión con tu cuenta autorizada.');return;}
+ if(!window.isSecureContext || !window.PublicKeyCredential){alert('Las llaves de acceso requieren un navegador compatible y una dirección HTTPS.');return;}
+ const boton=$('registerPasskeyBtn'); if(boton){boton.disabled=true;boton.textContent='Preparando llave…';}
+ try{
+  const {data,error}=await db.auth.registerPasskey();
+  if(error)throw error;
+  alert('¡Llave de acceso creada! Ya puedes cerrar sesión y entrar con “Ingresar con llave de acceso”.');
+ }catch(err){console.error('Error al registrar llave de acceso:',err);alert(explicarErrorPasskey(err));}
+ finally{if(boton){boton.disabled=false;boton.textContent='⌁ Crear llave de acceso';}}
+}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function iniciales(n){return String(n||'?').trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toLocaleUpperCase('es')}
 function ordenar(a, campo='numero'){
@@ -774,6 +802,7 @@ $('loginForm').addEventListener('submit',async e=>{
  e.preventDefault();
  if(!db){mensajeLogin('No se pudo conectar con el servicio de acceso. Recarga la página e inténtalo de nuevo.');return;}
  const email=$('loginEmail').value.trim(),password=$('loginPassword').value;
+ recordarCorreoLogin();
  $('loginSubmit').disabled=true;$('loginSubmit').textContent='Verificando…';mensajeLogin('');
  try{
   const {data,error}=await db.auth.signInWithPassword({email,password});
@@ -782,10 +811,21 @@ $('loginForm').addEventListener('submit',async e=>{
  }catch(err){
   console.error('Error de inicio de sesión:',err);
   mensajeLogin('No se pudo iniciar sesión. Verifica el correo y la contraseña o consulta al administrador.');
- }finally{$('loginSubmit').disabled=false;$('loginSubmit').textContent='Ingresar de forma segura';}
+ }finally{$('loginSubmit').disabled=false;$('loginSubmit').textContent='Ingresar con correo y contraseña';}
+});
+$('passkeyLogin').addEventListener('click',async()=>{
+ if(!db){mensajeLogin('No se pudo conectar con Supabase. Recarga la página e inténtalo de nuevo.');return;}
+ if(!window.isSecureContext || !window.PublicKeyCredential){mensajeLogin('Las llaves de acceso requieren HTTPS y un navegador compatible. Puedes entrar con correo y contraseña.');return;}
+ const boton=$('passkeyLogin');boton.disabled=true;boton.textContent='Verificando llave de acceso…';mensajeLogin('');
+ try{
+  const {data,error}=await db.auth.signInWithPasskey();
+  if(error)throw error;
+  if(data.session)await cambiarEstadoSesion(data.session);
+ }catch(err){console.error('Error de inicio con passkey:',err);mensajeLogin(explicarErrorPasskey(err));}
+ finally{boton.disabled=false;boton.textContent='⌁ Ingresar con llave de acceso';}
 });
 if(configurado && window.supabase){
- db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
+ db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true,experimental:{passkey:true}}});
  db.auth.getSession().then(({data,error})=>{
   if(error){console.error(error);mensajeLogin('No se pudo comprobar la sesión. Recarga la página.');return;}
   cambiarEstadoSesion(data.session);
