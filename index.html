@@ -58,18 +58,18 @@ td{line-height:1.45}
 .auth-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .auth-user{display:inline-flex;align-items:center;gap:9px;font-size:12px;color:#e0eee5;max-width:210px}.auth-avatar{width:34px;height:34px;flex:0 0 34px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#f5fff8,#b9e3ca);color:#14533d;border:1px solid #ffffff80;font-size:18px;box-shadow:0 2px 8px #001b1230}.auth-user-label{font-weight:650;letter-spacing:.1px}.auth-user-label small{display:block;font-size:10px;font-weight:400;color:#c5e4d2;margin-top:2px}
 .logout-btn{border:1px solid #ffffff60;background:#ffffff12;color:white;border-radius:10px;padding:10px 13px}
-.login-screen{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at top left,#e7f1e9,#f8faf8 58%,#e5efe8)}
-.login-card{width:min(440px,100%);background:#fff;border:1px solid #dce8df;border-radius:24px;padding:clamp(24px,5vw,38px);box-shadow:0 24px 80px #153d2c18}
-.login-brand{width:64px;height:64px;border-radius:20px;display:grid;place-items:center;background:linear-gradient(135deg,#123e30,#2e805d);color:white;font-size:30px;margin-bottom:22px;box-shadow:0 8px 20px #174e3d24}
+.login-screen{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 12% 10%,#d6eee0 0,transparent 36%),radial-gradient(ellipse at 90% 90%,#d9e8ff 0,transparent 34%),linear-gradient(135deg,#f5f8f7 0%,#edf4f0 52%,#f5f7fb 100%)}
+.login-card{width:min(450px,100%);background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border:1px solid #dce8df;border-radius:28px;padding:clamp(26px,5vw,40px);box-shadow:0 30px 90px #153d2c20;animation:loginAppear .45s ease-out}@keyframes loginAppear{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.login-brand{width:68px;height:68px;border-radius:22px;display:grid;place-items:center;background:linear-gradient(145deg,#102f26,#23734f 68%,#55a878);color:white;font-size:32px;margin-bottom:22px;box-shadow:0 12px 28px #174e3d35;border:1px solid #ffffff80}
 .login-card h1{font-family:"Segoe UI",Arial,sans-serif;color:#153e30;font-size:27px;font-weight:750;letter-spacing:-.6px}
 .login-card .login-subtitle{color:#718278;line-height:1.55;font-size:14px;margin:9px 0 25px}
 .login-card .field{margin-bottom:17px}
 .login-card .field label{font-size:13px;color:#284b3b}
-.login-card .field input{width:100%;min-height:47px}
-.login-submit{width:100%;min-height:47px;margin-top:5px}
+.login-card .field input{width:100%;min-height:49px;border:1px solid #d5e2da;border-radius:13px;background:#fbfdfb;padding:12px 14px;transition:border-color .2s,box-shadow .2s}.login-card .field input:focus{outline:none;border-color:#33845e;box-shadow:0 0 0 4px #33845e1a;background:#fff}
+.login-submit{width:100%;min-height:49px;margin-top:5px;border-radius:13px;font-weight:700;letter-spacing:.1px;box-shadow:0 8px 18px #1c6b4824;transition:transform .18s,box-shadow .18s}.login-submit:hover{transform:translateY(-1px);box-shadow:0 12px 22px #1c6b4830}
 .passkey-login{width:100%;min-height:45px;margin-top:10px;background:#fff;color:#174b38;border:1px solid #b8d3c4;border-radius:12px;font-weight:650;cursor:pointer}.passkey-login:hover{background:#f0f7f2}.passkey-help{font-size:12px;color:#66796e;line-height:1.5;margin:10px 0 0}.passkey-setup-btn{border:1px solid #ffffff70;background:#ffffff18;color:#fff;border-radius:10px;padding:10px 13px;cursor:pointer}.passkey-setup-btn:hover{background:#ffffff2b}@media(max-width:600px){.passkey-setup-btn{padding:8px 10px}}
 .login-message{font-size:13px;line-height:1.5;color:#a52e2e;margin:12px 0 0;min-height:18px}
-.login-foot{font-size:11px;color:#87968d;text-align:center;margin-top:23px}
+.login-foot{font-size:11px;color:#87968d;text-align:center;margin-top:23px;padding-top:15px;border-top:1px solid #edf1ee}.catalog-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.catalog-header-actions .btn-soft{white-space:nowrap}@media(max-width:600px){.catalog-header-actions{width:100%;align-items:stretch}.catalog-header-actions .btn-soft,.catalog-header-actions select{width:100%}}
 body:not(.authenticated) > header,body:not(.authenticated) > main,body:not(.authenticated) > footer,body:not(.authenticated) > dialog{display:none!important}
 body.authenticated .login-screen{display:none!important}
 @media(max-width:600px){.auth-bar{width:100%;justify-content:flex-start}.auth-user{display:none}.logout-btn{padding:8px 10px}}
@@ -518,17 +518,18 @@ dialog{max-height:calc(100dvh - 24px);overscroll-behavior:contain}
 
 </section>
 <div class="dashboard-layout"><div class="dashboard-main"><div class="content-grid"><div>
-<section class="panel" id="directorio"><div class="panel-heading"><div><h2>Directorio de conferencias</h2><p>Al escribir el número del bosquejo o de la canción, el nombre se completa automáticamente si está registrado.</p></div><button class="btn-soft" onclick="abrirCatalogos()">⚙ Administrar bosquejos y canciones</button></div>
-<div class="tools"><div class="search-wrap"><span>⌕</span><input id="buscar" type="search" placeholder="Buscar nombre, bosquejo, canción o teléfono…" oninput="paginaDirectorio=1;renderizar()"></div><select id="ordenDirectorio" onchange="paginaDirectorio=1;renderizar()" aria-label="Ordenar directorio"><option value="nombre" selected>Ordenar: nombre del conferenciante</option><option value="numero">Ordenar: n.º de bosquejo</option><option value="bosquejo">Ordenar: nombre del bosquejo</option></select><select id="filtro" onchange="paginaDirectorio=1;renderizar()" aria-label="Filtrar registros"><option value="">Todos los registros</option><option value="completos">Con bosquejo asignado</option><option value="incompletos">Sin bosquejo asignado</option></select><button class="add-main" onclick="nuevoRegistro()">＋ Agregar</button></div>
+<section class="panel" id="directorio"><div class="panel-heading"><div><h2>Directorio de conferencias</h2><p>Al escribir el número del bosquejo o de la canción, el nombre se completa automáticamente si está registrado.</p></div></div>
+<div class="tools"><div class="search-wrap"><span>⌕</span><input id="buscar" type="search" placeholder="Buscar nombre, bosquejo, canción o teléfono…" oninput="paginaDirectorio=1;renderizar()"></div><select id="ordenDirectorio" onchange="paginaDirectorio=1;renderizar()" aria-label="Ordenar directorio"><option value="nombre" selected>Ordenar: nombre del conferenciante</option><option value="numero">Ordenar: n.º de bosquejo</option><option value="bosquejo">Ordenar: nombre del bosquejo</option></select><select id="filtro" onchange="paginaDirectorio=1;renderizar()" aria-label="Filtrar registros"><option value="">Todos los registros</option><option value="completos">Con bosquejo asignado</option><option value="incompletos">Sin bosquejo asignado</option></select></div>
 <div class="table-wrap"><table class="directory-table"><thead><tr><th>#</th><th>Nombre</th><th>Teléfono</th><th>Bosquejo</th><th>Canción</th><th>Acciones</th></tr></thead><tbody id="filas"></tbody></table></div>
 <div class="table-foot"><span id="contador">Mostrando 0 registros</span><span>✦ Congregación Arrayanes</span></div><div class="pagination" id="paginacion" aria-label="Páginas del directorio"></div><section class="directory-tools-panel" aria-label="Herramientas del directorio">
 <div class="directory-tools-heading"><span class="directory-tools-symbol">✦</span><div><h3>Herramientas del directorio</h3><p>Imprime el directorio o guarda una copia en Excel.</p></div></div>
 <div class="directory-tools-grid">
+<button class="directory-tool-card" type="button" onclick="nuevoRegistro()"><span class="directory-tool-icon" aria-hidden="true">＋</span><span class="directory-tool-copy"><strong>Agregar conferenciante</strong><small>Registrar una persona nueva en el directorio</small></span><span class="directory-tool-arrow" aria-hidden="true">›</span></button>
 <button class="directory-tool-card" type="button" onclick="imprimirDirectorio()"><span class="directory-tool-icon print-icon" aria-hidden="true">▣</span><span class="directory-tool-copy"><strong>Imprimir directorio</strong><small>Versión limpia para papel</small></span><span class="directory-tool-arrow" aria-hidden="true">›</span></button>
 <button class="directory-tool-card" type="button" onclick="exportarCSV()"><span class="directory-tool-icon excel-icon" aria-hidden="true">▤</span><span class="directory-tool-copy"><strong>Exportar a Excel</strong><small>Guardar una copia de los datos</small></span><span class="directory-tool-arrow" aria-hidden="true">›</span></button>
 </div></section><p class="note">Los datos se guardan en la base de datos compartida y los cambios se actualizan para los demás usuarios. Exporta periódicamente una copia para respaldo.</p>
 </section>
-<section class="panel" id="catalogos"><div class="panel-heading"><div><h2>Catálogos registrados</h2><p>Consulta los números y nombres de todos los bosquejos y canciones.</p></div><select id="ordenCatalogo" onchange="renderizar()" aria-label="Ordenar catálogos"><option value="numero" selected>Ordenar por número</option><option value="nombre">Ordenar por nombre</option></select></div>
+<section class="panel" id="catalogos"><div class="panel-heading"><div><h2>Catálogos registrados</h2><p>Consulta los números y nombres de todos los bosquejos y canciones.</p></div><div class="catalog-header-actions"><button class="btn-soft" type="button" onclick="abrirCatalogos()">⚙ Administrar bosquejos y canciones</button><select id="ordenCatalogo" onchange="renderizar()" aria-label="Ordenar catálogos"><option value="numero" selected>Ordenar por número</option><option value="nombre">Ordenar por nombre</option></select></div></div>
 <div class="catalog-grid"><div class="catalog-box"><h3>▤ Bosquejos</h3><div class="search-wrap catalog-search"><span>⌕</span><input id="buscarBosquejosCatalogo" type="search" placeholder="Buscar bosquejo por número (ej. 12345) o nombre…" oninput="renderizar()"></div><div class="table-wrap"><table class="mini-table"><thead><tr><th>N.º</th><th>Nombre</th></tr></thead><tbody id="listaBosquejos"></tbody></table></div></div><div class="catalog-box"><h3>♫ Canciones</h3><div class="search-wrap catalog-search"><span>⌕</span><input id="buscarCancionesCatalogo" type="search" placeholder="Buscar canción por número o nombre…" oninput="renderizar()"></div><div class="table-wrap"><table class="mini-table"><thead><tr><th>N.º</th><th>Nombre</th></tr></thead><tbody id="listaCanciones"></tbody></table></div></div></div>
 </section>
 <section class="panel" id="panelAsignaciones">
@@ -1030,4 +1031,28 @@ renderizar();
 #asigNumero,#asigCancion{width:100%;min-width:0;background-color:#fff;cursor:pointer}
 #asigNumero option,#asigCancion option{padding:7px}
 @media(max-width:600px){.auth-bar{top:auto;bottom:7px;right:8px}.logout-btn{font-size:11px;padding:7px 10px}}
+
+/* Acceso premium moderno: solo presentación; conserva los IDs y el flujo de autenticación */
+.login-screen{position:relative;isolation:isolate;overflow:hidden;min-height:100svh;padding:28px;background:radial-gradient(ellipse at 15% 18%,rgba(45,212,140,.23),transparent 32%),radial-gradient(ellipse at 88% 82%,rgba(70,120,255,.22),transparent 30%),linear-gradient(135deg,#071a17 0%,#0c2824 48%,#101b35 100%)}
+.login-screen:before,.login-screen:after{content:"";position:absolute;z-index:-1;border:1px solid rgba(255,255,255,.09);border-radius:50%;pointer-events:none}
+.login-screen:before{width:540px;height:540px;left:-210px;bottom:-270px;box-shadow:0 0 0 38px rgba(255,255,255,.018),0 0 0 78px rgba(255,255,255,.015)}
+.login-screen:after{width:440px;height:440px;right:-170px;top:-210px;box-shadow:0 0 0 35px rgba(255,255,255,.02),0 0 0 72px rgba(255,255,255,.014)}
+.login-card{position:relative;width:min(465px,100%);padding:clamp(30px,5vw,46px);border:1px solid rgba(255,255,255,.2);border-radius:30px;background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(246,251,248,.94));box-shadow:0 36px 100px rgba(0,0,0,.34),inset 0 1px 0 #fff;backdrop-filter:blur(24px);animation:loginAppear .55s cubic-bezier(.2,.8,.2,1)}
+.login-brand{width:76px;height:76px;margin:0 auto 22px;border-radius:25px;background:linear-gradient(145deg,#0b3027,#157b54 65%,#48c58a);font-size:37px;box-shadow:0 14px 32px rgba(21,123,84,.3),inset 0 1px 0 rgba(255,255,255,.5);position:relative}
+.login-card .eyebrow{text-align:center!important;text-transform:uppercase;letter-spacing:3px;font-size:10px;font-weight:800;color:#25845c!important}
+.login-card h1{text-align:center;font-size:32px;letter-spacing:2px;color:#102e25;margin:0}
+.login-card .login-subtitle{text-align:center;max-width:330px;margin:12px auto 30px;color:#718179;font-size:14px;line-height:1.7}
+.login-card .field label{display:block;font-size:12px;font-weight:750;letter-spacing:.3px;color:#304c40;margin-bottom:8px}
+.login-card .field input{box-sizing:border-box;min-height:54px;border-radius:15px;border:1px solid #dce7e0;background:#f8fbf9;padding:14px 16px;color:#17392c;font-size:14px;box-shadow:inset 0 1px 2px rgba(10,50,30,.025)}
+.login-card .field input::placeholder{color:#a0aea6}
+.login-card .field input:focus{border-color:#259667;box-shadow:0 0 0 4px rgba(37,150,103,.13);background:#fff}
+.login-submit{min-height:54px;border:0!important;border-radius:15px!important;background:linear-gradient(105deg,#126b49,#16885a 55%,#21a66e)!important;color:#fff!important;font-size:14px;font-weight:750;box-shadow:0 12px 24px rgba(18,107,73,.24)!important}
+.login-submit:hover{transform:translateY(-2px);box-shadow:0 16px 28px rgba(18,107,73,.3)!important}
+.passkey-login{min-height:51px;margin-top:12px;border-radius:15px;border-color:#d6e5dc;background:#fff;color:#245740;transition:background .2s,border-color .2s,transform .2s}
+.passkey-login:hover{background:#f0f8f3;border-color:#9ccbb0;transform:translateY(-1px)}
+.passkey-help{text-align:center;font-size:11px;color:#7b8c82;line-height:1.65;margin-top:13px}
+.login-message{text-align:center;overflow-wrap:anywhere}
+.login-foot{border-top:1px solid #e7eee9;color:#87978e;padding-top:18px;font-size:10px;letter-spacing:.4px}
+@media(max-width:600px){.login-screen{padding:18px;min-height:100svh}.login-card{padding:30px 22px;border-radius:25px}.login-brand{width:68px;height:68px;border-radius:22px}.login-card h1{font-size:28px}.login-card .login-subtitle{margin-bottom:25px}}
+@media(prefers-reduced-motion:reduce){.login-card{animation:none}.login-submit,.passkey-login{transition:none}}
 </style>
