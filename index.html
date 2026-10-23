@@ -535,16 +535,17 @@ dialog{max-height:calc(100dvh - 24px);overscroll-behavior:contain}
  <div class="panel-heading"><div><h2>Historial y control de asignaciones</h2><p>Registra conferencias programadas y consulta el historial por conferenciante.</p></div></div>
  <form id="formAsignacion" class="catalog-grid">
   <div class="field"><label for="asigConferenciante">Conferenciante *</label><select id="asigConferenciante" required><option value="">Selecciona una persona</option></select></div>
+  <div class="field"><label for="asigCongregacion">Congregación</label><input id="asigCongregacion" maxlength="150" placeholder="Nombre de la congregación"></div>
   <div class="field"><label for="asigFecha">Fecha de conferencia *</label><input id="asigFecha" type="date" required></div>
-  <div class="field"><label for="asigNumero">N.º de bosquejo</label><input id="asigNumero" list="opcionesBosquejos" autocomplete="off" placeholder="Escribe o selecciona un bosquejo"><div class="hint">Selecciona una opción para ver el número y el nombre.</div></div>
-  <div class="field"><label for="asigCancion">Canción</label><input id="asigCancion" list="opcionesCanciones" autocomplete="off" placeholder="Escribe o selecciona una canción"><div class="hint">Selecciona una opción para ver el número y el nombre.</div></div>
+  <div class="field"><label for="asigNumero">N.º de bosquejo</label><select id="asigNumero" aria-label="Seleccionar bosquejo"><option value="">Selecciona un bosquejo</option></select><div class="hint">Selecciona una opción para ver el número y el nombre.</div></div>
+  <div class="field"><label for="asigCancion">Canción</label><select id="asigCancion" aria-label="Seleccionar canción"><option value="">Selecciona una canción</option></select><div class="hint">Selecciona una opción para ver el número y el nombre.</div></div>
   <div class="field"><label for="asigEstado">Estado *</label><select id="asigEstado" required><option value="Programada">Programada</option><option value="Realizada">Realizada</option><option value="Pendiente">Pendiente</option><option value="Cancelada">Cancelada</option></select></div>
   <div class="field"><label for="asigNotas">Notas (opcional)</label><input id="asigNotas" maxlength="500" placeholder="Observaciones"></div>
   <div class="form-actions" style="grid-column:1/-1;justify-content:flex-start"><button class="primary" type="submit">＋ Guardar asignación</button><button class="cancel" type="button" onclick="limpiarFormularioAsignacion()">Limpiar</button></div>
  </form>
  <div class="tools" style="margin-top:18px"><div class="search-wrap"><span>⌕</span><input id="buscarAsignacion" type="search" placeholder="Buscar en el historial…" aria-label="Buscar en el historial"></div><select id="filtroPersonaHistorial" aria-label="Filtrar historial por conferenciante"><option value="">Todos los conferenciantes</option></select><select id="filtroEstadoAsignacion" aria-label="Filtrar por estado"><option value="">Todos los estados</option><option>Programada</option><option>Realizada</option><option>Pendiente</option><option>Cancelada</option></select></div>
  <div id="resumenPersonaHistorial" class="history-person-summary" hidden aria-live="polite"></div>
- <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Conferenciante</th><th>Bosquejo</th><th>Canción</th><th>Estado</th><th>Notas</th><th>Acciones</th></tr></thead><tbody id="filasAsignaciones"><tr><td colspan="7" class="empty">Cargando historial…</td></tr></tbody></table></div>
+ <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Conferenciante</th><th>Congregación</th><th>Bosquejo</th><th>Canción</th><th>Estado</th><th>Notas</th><th>Acciones</th></tr></thead><tbody id="filasAsignaciones"><tr><td colspan="8" class="empty">Cargando historial…</td></tr></tbody></table></div>
  <p class="note" id="avisoAsignaciones">El historial requiere crear la tabla adicional «asignaciones» en Supabase usando el archivo SQL de configuración incluido.</p>
 </section></div>
 <aside class="side"><div class="side-card quick-panel"><h3>Accesos rápidos</h3><div class="quick-grid"><a href="#panelAsignaciones"><span class="quick-symbol green">▦</span><b>Calendario</b><small>Conferencias</small></a><a href="#catalogos"><span class="quick-symbol blue">▤</span><b>Bosquejos</b><small>Listado y búsqueda</small></a><a href="#catalogos"><span class="quick-symbol purple">♫</span><b>Canciones</b><small>Listado y búsqueda</small></a><a href="#panelAsignaciones"><span class="quick-symbol orange">♙</span><b>Asignaciones</b><small>Ver y gestionar</small></a><a href="#directorio"><span class="quick-symbol teal">▣</span><b>Directorio</b><small>Personas registradas</small></a><a href="#catalogos"><span class="quick-symbol gray">⚙</span><b>Administración</b><small>Catálogos y ajustes</small></a></div></div><div class="side-card upcoming"><div class="upcoming-title"><h3>▦ Próximas conferencias</h3><a href="#panelAsignaciones">Ver todas →</a></div><p>Consulta las próximas fechas registradas en el historial de asignaciones.</p><div class="upcoming-empty" id="upcomingList">Las próximas conferencias aparecerán aquí cuando haya asignaciones guardadas.</div></div><div class="side-card quote">“Todo lo que hagan, háganlo de todo corazón, como para el Señor.”<small>Colosenses 3:23</small></div></aside>
@@ -613,12 +614,49 @@ function ordenar(a, campo='numero'){
   return compararTexto(x[campo],y[campo]) || compararTexto(x.numero,y.numero);
  });
 }
-function buscarBosquejo(n){const v=String(n||'').trim().toLowerCase();const primero=v.split(' - ')[0].trim();return bosquejos.find(b=>String(b.numero).trim().toLowerCase()===v||String(b.numero).trim().toLowerCase()===primero)||bosquejos.find(b=>String(b.nombre||'').trim().toLowerCase()===v)}
-function buscarCancion(n){const v=String(n||'').trim().toLowerCase();const primero=v.split(' - ')[0].trim();return canciones.find(c=>String(c.numero).trim().toLowerCase()===v||String(c.numero).trim().toLowerCase()===primero)||canciones.find(c=>String(c.nombre).trim().toLowerCase()===v)}
+function buscarBosquejo(n){const v=String(n||'').trim().toLowerCase();const primero=v.split(' - ')[0].trim();const todos=[...bosquejos,...registros.map(r=>({numero:r.numero,nombre:r.bosquejo})),...asignaciones.map(a=>({numero:a.numero_bosquejo,nombre:a.nombre_bosquejo}))];return todos.find(b=>String(b.numero||'').trim().toLowerCase()===v||String(b.numero||'').trim().toLowerCase()===primero)||todos.find(b=>String(b.nombre||'').trim().toLowerCase()===v)}
+function buscarCancion(n){const v=String(n||'').trim().toLowerCase();const primero=v.split(' - ')[0].trim();const todos=[...canciones,...registros.map(r=>{const m=String(r.cancion||'').match(/^\s*(.*?)\s*-\s*(.*)$/);return m?{numero:m[1],nombre:m[2]}:{numero:'',nombre:r.cancion}}),...asignaciones.map(a=>{const m=String(a.cancion||'').match(/^\s*(.*?)\s*-\s*(.*)$/);return m?{numero:m[1],nombre:m[2]}:{numero:'',nombre:a.cancion}})];return todos.find(c=>String(c.numero||'').trim().toLowerCase()===v||String(c.numero||'').trim().toLowerCase()===primero)||todos.find(c=>String(c.nombre||'').trim().toLowerCase()===v)}
+function opcionesUnicasBosquejos(){
+ const map=new Map();
+ [...bosquejos,...registros.map(r=>({numero:r.numero,nombre:r.bosquejo})),...asignaciones.map(a=>({numero:a.numero_bosquejo,nombre:a.nombre_bosquejo}))].forEach(x=>{
+  const numero=String(x.numero||'').trim(),nombre=String(x.nombre||'').trim();
+  if(!numero&&!nombre)return;
+  const key=normalizarDuplicado(numero)+'|'+normalizarDuplicado(nombre);
+  if(!map.has(key))map.set(key,{numero,nombre});
+ });
+ return [...map.values()].sort((a,b)=>String(a.numero).localeCompare(String(b.numero),'es',{numeric:true,sensitivity:'base'}));
+}
+function opcionesUnicasCanciones(){
+ const map=new Map();
+ [...canciones,...registros.map(r=>{const m=String(r.cancion||'').match(/^\s*(.*?)\s*-\s*(.*)$/);return m?{numero:m[1],nombre:m[2]}:{numero:'',nombre:r.cancion}}),...asignaciones.map(a=>{const m=String(a.cancion||'').match(/^\s*(.*?)\s*-\s*(.*)$/);return m?{numero:m[1],nombre:m[2]}:{numero:'',nombre:a.cancion}})].forEach(x=>{
+  const numero=String(x.numero||'').trim(),nombre=String(x.nombre||'').trim();
+  if(!numero&&!nombre)return;
+  const key=normalizarDuplicado(numero)+'|'+normalizarDuplicado(nombre);
+  if(!map.has(key))map.set(key,{numero,nombre});
+ });
+ return [...map.values()].sort((a,b)=>String(a.numero).localeCompare(String(b.numero),'es',{numeric:true,sensitivity:'base'}));
+}
+function renderSelectCatalogo(id,items,placeholder,seleccion=''){
+ const el=$(id);if(!el)return;
+ const valorActual=seleccion||el.value;
+ el.innerHTML=`<option value="">${placeholder}</option>`+items.map(x=>{
+  const value=[x.numero,x.nombre].filter(Boolean).join(' - ');
+  return `<option value="${esc(value)}">${esc(value)}</option>`;
+ }).join('');
+ if(valorActual&&[...el.options].some(o=>o.value===valorActual))el.value=valorActual;
+}
+function actualizarOpcionesBosquejosYCanciones(){
+ renderSelectCatalogo('asigNumero',opcionesUnicasBosquejos(),'Selecciona un bosquejo');
+ renderSelectCatalogo('asigCancion',opcionesUnicasCanciones(),'Selecciona una canción');
+ const unicosB=opcionesUnicasBosquejos();
+ $('opcionesBosquejos').innerHTML=unicosB.map(x=>`<option value="${esc([x.numero,x.nombre].filter(Boolean).join(' - '))}"></option>`).join('');
+ const unicosC=opcionesUnicasCanciones();
+ $('opcionesCanciones').innerHTML=unicosC.map(x=>`<option value="${esc([x.numero,x.nombre].filter(Boolean).join(' - '))}"></option>`).join('');
+}
 async function cargarDatos(){
  const [r,b,c]=await Promise.all([db.from('conferenciantes').select('*').order('nombre'),db.from('bosquejos').select('*'),db.from('canciones').select('*')]);
  const err=r.error||b.error||c.error;if(err){console.error(err);alert('No se pudieron cargar los datos compartidos. Verifica las tablas y permisos de Supabase. Detalle: '+err.message);return}
- registros=r.data||[];bosquejos=b.data||[];canciones=c.data||[];paginaDirectorio=1;renderizar();
+ registros=r.data||[];bosquejos=b.data||[];canciones=c.data||[];paginaDirectorio=1;actualizarOpcionesBosquejosYCanciones();renderizar();
  try{
   const a=await db.from('asignaciones').select('*').order('fecha',{ascending:false});
   if(a.error){asignacionesDisponible=false;asignaciones=[];$('avisoAsignaciones').textContent='Para activar el historial, ejecuta el archivo Configuracion_asignaciones_Arrayanes.sql en el editor SQL de Supabase. El directorio y los catálogos siguen funcionando.';renderizarAsignaciones();}
@@ -715,7 +753,7 @@ function exportarCSV(){
  XLSX.writeFile(wb,'Conferenciantes_Arrayanes.xlsx');
 }
 function imprimirDirectorio(){document.body.classList.add('print-only-directory');window.print();setTimeout(()=>document.body.classList.remove('print-only-directory'),800)}
-function limpiarFormularioAsignacion(){$('formAsignacion').reset();$('asigEstado').value='Programada'}
+function limpiarFormularioAsignacion(){$('formAsignacion').reset();$('asigEstado').value='Programada';$('asigCongregacion').value=''}
 function renderizarAsignaciones(){
  if(!$('filasAsignaciones'))return;
  // Conservar ambos selectores antes de reconstruir sus opciones; si no, el nombre
@@ -729,7 +767,7 @@ function renderizarAsignaciones(){
  $('filtroPersonaHistorial').innerHTML='<option value="">Todos los conferenciantes</option>'+personasUnicas.map(([clave,r])=>`<option value="${esc(clave)}">${esc(String(r.nombre).trim())}</option>`).join('');
  if(personasUnicas.some(([clave])=>clave===actual))$('filtroPersonaHistorial').value=actual;
  if(personasUnicas.some(([clave,r])=>String(r.id)===String(actualAsignado)))$('asigConferenciante').value=actualAsignado;
- if(!asignacionesDisponible){$('filasAsignaciones').innerHTML='<tr><td colspan="7" class="empty">El historial estará disponible después de configurar la tabla en Supabase.</td></tr>';return}
+ if(!asignacionesDisponible){$('filasAsignaciones').innerHTML='<tr><td colspan="8" class="empty">El historial estará disponible después de configurar la tabla en Supabase.</td></tr>';return}
  const q=$('buscarAsignacion').value.trim().toLocaleLowerCase('es'),persona=$('filtroPersonaHistorial').value,estado=$('filtroEstadoAsignacion').value;
  const nombreSeleccionado=(personasUnicas.find(([clave])=>clave===persona)||[])[1]?.nombre||'';
  const historialPersona=asignaciones.filter(a=>!persona||normalizarDuplicado(a.conferenciante_nombre)===persona||(()=>{const r=registros.find(x=>String(x.id)===String(a.conferenciante_id));return !!r&&normalizarDuplicado(r.nombre)===persona})());
@@ -743,8 +781,8 @@ function renderizarAsignaciones(){
   resumen.hidden=false;
   resumen.innerHTML=`<h3>Historial de ${esc(nombreSeleccionado||historialPersona[0]?.conferenciante_nombre||'Conferenciante')}</h3><div class="history-summary-grid"><div><strong>▤ Bosquejos</strong><p>${bs.length?bs.map(esc).join(' · '):'Sin bosquejos registrados'}</p></div><div><strong>♫ Canciones</strong><p>${cs.length?cs.map(esc).join(' · '):'Sin canciones registradas'}</p></div></div><p class="note">Se incluyen los datos del directorio y las asignaciones guardadas.</p>`;
  }else{resumen.hidden=true;resumen.innerHTML=''}
- const lista=historialPersona.filter(a=>(!estado||a.estado===estado)&&[a.conferenciante_nombre,a.fecha,a.numero_bosquejo,a.nombre_bosquejo,a.cancion,a.estado,a.notas].some(v=>String(v||'').toLocaleLowerCase('es').includes(q)));
- $('filasAsignaciones').innerHTML=lista.length?lista.map(a=>`<tr><td>${esc(a.fecha||'—')}</td><td>${esc(a.conferenciante_nombre||'—')}</td><td>${esc([a.numero_bosquejo,a.nombre_bosquejo].filter(Boolean).join(' · ')||'—')}</td><td>${esc(a.cancion||'—')}</td><td><select class="estado-select" aria-label="Cambiar estado" onchange="actualizarEstadoAsignacion('${esc(String(a.id))}',this.value)">${['Programada','Realizada','Pendiente','Cancelada'].map(e=>`<option value="${e}" ${a.estado===e?'selected':''}>${e}</option>`).join('')}</select></td><td>${esc(a.notas||'—')}</td><td><button class="icon-btn delete" title="Eliminar asignación" onclick="eliminarAsignacion('${esc(String(a.id))}')">×</button></td></tr>`).join(''):`<tr><td colspan="7" class="empty">No hay asignaciones para estos filtros.</td></tr>`;
+ const lista=historialPersona.filter(a=>(!estado||a.estado===estado)&&[a.conferenciante_nombre,a.congregacion,a.fecha,a.numero_bosquejo,a.nombre_bosquejo,a.cancion,a.estado,a.notas].some(v=>String(v||'').toLocaleLowerCase('es').includes(q)));
+ $('filasAsignaciones').innerHTML=lista.length?lista.map(a=>`<tr><td>${esc(a.fecha||'—')}</td><td>${esc(a.conferenciante_nombre||'—')}</td><td>${esc(a.congregacion||'—')}</td><td>${esc([a.numero_bosquejo,a.nombre_bosquejo].filter(Boolean).join(' · ')||'—')}</td><td>${esc(a.cancion||'—')}</td><td><select class="estado-select" aria-label="Cambiar estado" onchange="actualizarEstadoAsignacion('${esc(String(a.id))}',this.value)">${['Programada','Realizada','Pendiente','Cancelada'].map(e=>`<option value="${e}" ${a.estado===e?'selected':''}>${e}</option>`).join('')}</select></td><td>${esc(a.notas||'—')}</td><td><button class="icon-btn delete" title="Eliminar asignación" onclick="eliminarAsignacion('${esc(String(a.id))}')">×</button></td></tr>`).join(''):`<tr><td colspan="8" class="empty">No hay asignaciones para estos filtros.</td></tr>`;
 }
 function generarIdAsignacion(){
  if(window.crypto&&typeof window.crypto.randomUUID==='function')return window.crypto.randomUUID();
@@ -771,7 +809,7 @@ $('formAsignacion').addEventListener('submit',async e=>{
  if(!persona){alert('Selecciona un conferenciante registrado.');return}
  const fecha=$('asigFecha').value, entradaBosquejo=$('asigNumero').value.trim(), cancionEntrada=$('asigCancion').value.trim();
  const b=buscarBosquejo(entradaBosquejo), c=buscarCancion(cancionEntrada), numero=b?String(b.numero):entradaBosquejo;
- const asignacion={id:generarIdAsignacion(),conferenciante_id:String(persona.id),conferenciante_nombre:persona.nombre||'',fecha,numero_bosquejo:numero,nombre_bosquejo:b?b.nombre:'',cancion:c?`${c.numero} - ${c.nombre}`:cancionEntrada,estado:$('asigEstado').value,notas:$('asigNotas').value.trim()};
+ const asignacion={id:generarIdAsignacion(),conferenciante_id:String(persona.id),conferenciante_nombre:persona.nombre||'',congregacion:$('asigCongregacion').value.trim(),fecha,numero_bosquejo:numero,nombre_bosquejo:b?b.nombre:'',cancion:c?`${c.numero} - ${c.nombre}`:cancionEntrada,estado:$('asigEstado').value,notas:$('asigNotas').value.trim()};
  const duplicada=asignaciones.find(a=>String(a.conferenciante_id)===asignacion.conferenciante_id&&a.fecha===fecha&&a.estado!=='Cancelada'&&asignacion.estado!=='Cancelada');
  if(duplicada&&!confirm(`Este conferenciante ya tiene una asignación para ${fecha}. ¿Deseas guardar otra de todas formas?`))return;
  const boton=$('formAsignacion').querySelector('button[type="submit"]');
@@ -802,12 +840,34 @@ function mostrarNombreCancionAsignacion(){
  const campo=$('asigCancion'); if(!campo)return;
  const c=buscarCancion(campo.value); if(c)campo.value=`${c.numero} - ${c.nombre}`;
 }
-$('asigNumero').addEventListener('change',mostrarNombreBosquejoAsignacion);
-$('asigNumero').addEventListener('input',()=>{const b=buscarBosquejo($('asigNumero').value); if(b && $('asigNumero').value.trim()===String(b.numero).trim()) $('asigNumero').value=`${b.numero} - ${b.nombre}`;});
+$('asigNumero').addEventListener('change',()=>{
+ mostrarNombreBosquejoAsignacion();
+ const campo=$('asigNumero');
+ const seleccionado=buscarBosquejo(campo.value);
+ const id=$('asigConferenciante').value;
+ const persona=id?registros.find(r=>String(r.id)===String(id)):null;
+ if(!persona||!seleccionado)return;
+ const clave=normalizarDuplicado(persona.nombre);
+ const fila=registros.find(r=>normalizarDuplicado(r.nombre)===clave &&
+   ((String(r.numero||'').trim() && String(r.numero||'').trim()===String(seleccionado.numero||'').trim()) ||
+    (String(r.bosquejo||'').trim() && normalizarDuplicado(r.bosquejo)===normalizarDuplicado(seleccionado.nombre))));
+ if(fila&&fila.cancion){
+   const raw=String(fila.cancion).trim();
+   const m=raw.match(/^\s*(.*?)\s*-\s*(.*)$/);
+   const item=m?{numero:m[1],nombre:m[2]}:{numero:'',nombre:raw};
+   const opciones=opcionesUnicasCanciones();
+   const cancion=opciones.find(c=>(item.numero&&String(c.numero)===item.numero)||(item.nombre&&normalizarDuplicado(c.nombre)===normalizarDuplicado(item.nombre)))||item;
+   renderSelectCatalogo('asigCancion',[cancion],'Canción asociada al bosquejo','');
+   $('asigCancion').value=[cancion.numero,cancion.nombre].filter(Boolean).join(' - ');
+ }else{
+   renderSelectCatalogo('asigCancion',opcionesUnicasCanciones(),'No hay canción asociada registrada','');
+ }
+});
 $('asigCancion').addEventListener('change',mostrarNombreCancionAsignacion);
 $('asigConferenciante').addEventListener('change',()=>{
  const id=$('asigConferenciante').value;
  const persona=id?registros.find(r=>String(r.id)===String(id)):null;
+ if(persona && !$('asigCongregacion').value.trim()) $('asigCongregacion').value=String(persona.congregacion||'');
  $('filtroPersonaHistorial').value=persona?normalizarDuplicado(persona.nombre):'';
  if(persona){
   // Un conferenciante puede tener varios registros en el directorio, cada uno con
@@ -826,17 +886,33 @@ $('asigConferenciante').addEventListener('change',()=>{
     ...asignacionesPersona.map(a=>String(a.cancion||'').trim())
   ].filter(Boolean))];
   // El primer dato registrado se muestra inicialmente; los demás quedan en la lista.
-  const primerBosquejo=bosquejosPersona[0];
-  const b=primerBosquejo?(buscarBosquejo(primerBosquejo.numero)||buscarBosquejo(primerBosquejo.nombre)):null;
-  $('asigNumero').value=primerBosquejo?(b?`${b.numero} - ${b.nombre}`:[primerBosquejo.numero,primerBosquejo.nombre].filter(Boolean).join(' - ')):'';
-  const primerCancion=cancionesPersona[0]||'';
-  const c=buscarCancion(primerCancion);
-  $('asigCancion').value=c?`${c.numero} - ${c.nombre}`:primerCancion;
-  // Hacer explícito que los datalist globales contienen todos los bosquejos/canciones,
-  // no solo el que se precarga al seleccionar la persona.
-  $('opcionesBosquejos').innerHTML=ordenar(bosquejos).map(x=>`<option value="${esc(String(x.numero)+' - '+String(x.nombre||''))}"></option>`).join('');
-  $('opcionesCanciones').innerHTML=ordenar(canciones).map(x=>`<option value="${esc(String(x.numero)+' - '+String(x.nombre||''))}"></option>`).join('');
- }else{$('asigNumero').value='';$('asigCancion').value=''}
+  const catalogoBosquejos=opcionesUnicasBosquejos();
+  const asociadosBosquejos=[...new Map(bosquejosPersona.map(x=>{
+   const match=catalogoBosquejos.find(y=>(x.numero&&String(y.numero)===String(x.numero))||(x.nombre&&normalizarDuplicado(y.nombre)===normalizarDuplicado(x.nombre)));
+   const item=match||x;return [normalizarDuplicado(item.numero)+'|'+normalizarDuplicado(item.nombre),item];
+  })).values()];
+  const catalogoCanciones=opcionesUnicasCanciones();
+  const asociadosCanciones=[...new Map(cancionesPersona.map(raw=>{
+   const m=String(raw).match(/^\s*(.*?)\s*-\s*(.*)$/);
+   const item=m?{numero:m[1],nombre:m[2]}:{numero:'',nombre:raw};
+   const match=catalogoCanciones.find(y=>(item.numero&&String(y.numero)===String(item.numero))||(item.nombre&&normalizarDuplicado(y.nombre)===normalizarDuplicado(item.nombre)));
+   const finalItem=match||item;return [normalizarDuplicado(finalItem.numero)+'|'+normalizarDuplicado(finalItem.nombre),finalItem];
+  })).values()];
+  // Mostrar ÚNICAMENTE los bosquejos asociados a esta persona; no añadir el catálogo general.
+  renderSelectCatalogo('asigNumero',asociadosBosquejos,'Selecciona un bosquejo','');
+  // Las canciones se completan al elegir un bosquejo, usando la misma fila del directorio.
+  renderSelectCatalogo('asigCancion',asociadosCanciones,'Selecciona la canción asociada','');
+  $('asigNumero').dataset.personaId=String(persona.id);
+  $('asigNumero').dataset.nombreClave=nombreClave;
+  $('asigCancion').dataset.personaId=String(persona.id);
+  // No preseleccionar un bosquejo ni una canción: el usuario elige el bosquejo y
+  // entonces se muestra la canción que está asociada a ese registro.
+ }else{
+  delete $('asigNumero').dataset.personaId; delete $('asigNumero').dataset.nombreClave;
+  delete $('asigCancion').dataset.personaId;
+  renderSelectCatalogo('asigNumero',opcionesUnicasBosquejos(),'Selecciona un bosquejo','');
+  renderSelectCatalogo('asigCancion',opcionesUnicasCanciones(),'Selecciona una canción','');
+ }
  renderizarAsignaciones();
 });
 $('filtroEstadoAsignacion').addEventListener('change',renderizarAsignaciones);
@@ -911,3 +987,13 @@ $('buscar').addEventListener('input',renderizar);$('filtro').addEventListener('c
 // Los formularios no se cierran al hacer clic fuera del recuadro. Se cierran solo con sus botones explícitos.
 renderizar();
 </script></body></html>
+<style>
+/* Encabezado más limpio: quitar el avatar decorativo y el botón con símbolo de llave del encabezado.
+   La opción de passkey sigue disponible en la pantalla de acceso. */
+.auth-user,.passkey-setup-btn{display:none!important}
+.auth-bar{top:12px;right:14px;gap:8px}
+.logout-btn{font-size:12px;padding:8px 12px;border-radius:9px;background:#ffffff18;border-color:#ffffff55;box-shadow:none}
+#asigNumero,#asigCancion{width:100%;min-width:0;background-color:#fff;cursor:pointer}
+#asigNumero option,#asigCancion option{padding:7px}
+@media(max-width:600px){.auth-bar{top:auto;bottom:7px;right:8px}.logout-btn{font-size:11px;padding:7px 10px}}
+</style>
