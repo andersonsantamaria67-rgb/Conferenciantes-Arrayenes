@@ -475,6 +475,16 @@ dialog{max-height:calc(100dvh - 24px);overscroll-behavior:contain}
   .nav-links a { padding: 7px !important; font-size: 10px !important; }
   .logout-btn { min-width: 138px; }
 }
+
+/* Mejora de administración: al desplazarse por los registros, los campos para agregar siguen a la vista */
+#catalogoModal{width:min(1000px,calc(100% - 28px));max-height:92vh;overscroll-behavior:contain}
+#catalogoModal .modal-head{position:sticky;top:0;z-index:20}
+#catalogoModal .form-body{overflow:visible}
+#catalogoModal .catalog-box h3{position:sticky;top:64px;z-index:12;background:#fff;padding:8px 0 6px;margin:0 0 8px}
+#catalogoModal .inline-form{position:sticky;top:102px;z-index:11;background:#fff;padding:7px 0 10px;margin:0 0 10px}
+#catalogoModal .table-wrap{max-height:38vh;overflow:auto;overscroll-behavior:contain}
+#catalogoModal .mini-table thead{position:sticky;top:0;z-index:5}
+@media(max-width:600px){#catalogoModal{max-height:calc(100dvh - 16px)}#catalogoModal .catalog-box h3{top:55px}#catalogoModal .inline-form{top:92px}#catalogoModal .table-wrap{max-height:32vh}}
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0"></script><script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <style>
 /* Historial: selector sin nombres repetidos y resumen por persona */
