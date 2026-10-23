@@ -718,13 +718,17 @@ function imprimirDirectorio(){document.body.classList.add('print-only-directory'
 function limpiarFormularioAsignacion(){$('formAsignacion').reset();$('asigEstado').value='Programada'}
 function renderizarAsignaciones(){
  if(!$('filasAsignaciones'))return;
+ // Conservar ambos selectores antes de reconstruir sus opciones; si no, el nombre
+ // elegido desaparece cada vez que se actualiza el historial.
  const actual=$('filtroPersonaHistorial').value;
+ const actualAsignado=$('asigConferenciante').value;
  const unicos=new Map();
  [...registros].filter(r=>String(r.nombre||'').trim()).sort((a,b)=>String(a.nombre||'').localeCompare(String(b.nombre||''),'es',{sensitivity:'base'})).forEach(r=>{const clave=normalizarDuplicado(r.nombre);if(clave&&!unicos.has(clave))unicos.set(clave,r)});
  const personasUnicas=[...unicos.entries()];
  $('asigConferenciante').innerHTML='<option value="">Selecciona una persona</option>'+personasUnicas.map(([clave,r])=>`<option value="${esc(String(r.id))}">${esc(String(r.nombre).trim())}</option>`).join('');
  $('filtroPersonaHistorial').innerHTML='<option value="">Todos los conferenciantes</option>'+personasUnicas.map(([clave,r])=>`<option value="${esc(clave)}">${esc(String(r.nombre).trim())}</option>`).join('');
  if(personasUnicas.some(([clave])=>clave===actual))$('filtroPersonaHistorial').value=actual;
+ if(personasUnicas.some(([clave,r])=>String(r.id)===String(actualAsignado)))$('asigConferenciante').value=actualAsignado;
  if(!asignacionesDisponible){$('filasAsignaciones').innerHTML='<tr><td colspan="7" class="empty">El historial estará disponible después de configurar la tabla en Supabase.</td></tr>';return}
  const q=$('buscarAsignacion').value.trim().toLocaleLowerCase('es'),persona=$('filtroPersonaHistorial').value,estado=$('filtroEstadoAsignacion').value;
  const nombreSeleccionado=(personasUnicas.find(([clave])=>clave===persona)||[])[1]?.nombre||'';
@@ -786,12 +790,13 @@ $('formAsignacion').addEventListener('submit',async e=>{
 $('buscarAsignacion').addEventListener('input',renderizarAsignaciones);
 $('filtroPersonaHistorial').addEventListener('change',()=>{
  const clave=$('filtroPersonaHistorial').value;
- const persona=registros.find(r=>normalizarDuplicado(r.nombre)===clave);
+ const persona=clave?registros.find(r=>normalizarDuplicado(r.nombre)===clave):null;
  $('asigConferenciante').value=persona?String(persona.id):'';
  renderizarAsignaciones();
 });
 $('asigConferenciante').addEventListener('change',()=>{
- const persona=registros.find(r=>String(r.id)===$('asigConferenciante').value);
+ const id=$('asigConferenciante').value;
+ const persona=id?registros.find(r=>String(r.id)===String(id)):null;
  $('filtroPersonaHistorial').value=persona?normalizarDuplicado(persona.nombre):'';
  renderizarAsignaciones();
 });
