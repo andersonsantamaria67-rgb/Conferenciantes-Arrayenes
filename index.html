@@ -557,6 +557,7 @@ dialog{max-height:calc(100dvh - 24px);overscroll-behavior:contain}
 <div class="field"><label for="bosquejo">Nombre del bosquejo</label><input id="bosquejo" maxlength="200" placeholder="Se completa automáticamente"></div>
 <div class="field"><label for="cancion">Canción (número o nombre)</label><input id="cancion" list="opcionesCanciones" maxlength="120" placeholder="Escribe el número o nombre"><datalist id="opcionesCanciones"></datalist><div class="hint">Si escribes el número de una canción registrada, aparecerá su nombre.</div></div>
 <div class="field"><label for="telefono">Teléfono</label><input id="telefono" type="tel" maxlength="30" placeholder="Número de contacto"></div>
+<div class="field"><label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer"><input id="whatsappAutorizado" type="checkbox" style="width:auto;min-width:16px;margin-top:4px">Acepta recibir recordatorios de asignaciones por WhatsApp</label><div class="hint">Marca esta opción solo si la persona autorizó recibir estos mensajes en este número.</div></div>
 <div class="form-actions"><button type="button" class="cancel" onclick="cerrarModal()">Cancelar</button><button class="primary" type="submit">▣ Guardar registro</button></div></form></dialog>
 
 <dialog id="catalogoModal"><div class="modal-head"><h2>Administrar catálogos</h2><button class="close" onclick="cerrarCatalogos()" aria-label="Cerrar">×</button></div><div class="form-body"><p class="note" style="margin-top:0">Agrega todos los bosquejos y canciones con su número y nombre. Los cambios se guardan automáticamente.</p>
@@ -664,10 +665,10 @@ function buscarConferenciantePorNombre(nombre){const n=String(nombre||'').trim()
 function actualizarTelefonoConferenciante(){const r=buscarConferenciantePorNombre($('nombre').value);if(r&&String(r.telefono||'').trim())$('telefono').value=r.telefono}
 $('nombre').addEventListener('change',actualizarTelefonoConferenciante);$('nombre').addEventListener('input',()=>{const r=buscarConferenciantePorNombre($('nombre').value);if(r)actualizarTelefonoConferenciante()});
 $('numero').addEventListener('input',actualizarNombreBosquejo);$('numero').addEventListener('change',actualizarNombreBosquejo);$('cancion').addEventListener('change',actualizarNombreCancion);$('asigCancion').addEventListener('change',()=>{const c=buscarCancion($('asigCancion').value);if(c)$('asigCancion').value=`${c.numero} - ${c.nombre}`});
-function nuevoRegistro(){$('formulario').reset();$('indice').value='';$('modalTitulo').textContent='Agregar conferenciante';$('modal').showModal();$('nombre').focus()}
-function editarRegistro(i){const r=registros[i];if(!r)return;$('indice').value=i;$('modalTitulo').textContent='Editar conferenciante';['nombre','numero','bosquejo','cancion','telefono'].forEach(k=>$(k).value=r[k]||'');$('modal').showModal()}
+function nuevoRegistro(){$('formulario').reset();$('whatsappAutorizado').checked=false;$('indice').value='';$('modalTitulo').textContent='Agregar conferenciante';$('modal').showModal();$('nombre').focus()}
+function editarRegistro(i){const r=registros[i];if(!r)return;$('indice').value=i;$('modalTitulo').textContent='Editar conferenciante';['nombre','numero','bosquejo','cancion','telefono'].forEach(k=>$(k).value=r[k]||'');$('whatsappAutorizado').checked=r.whatsapp_autorizado===true;$('modal').showModal()}
 function cerrarModal(){$('modal').close()}
-$('formulario').addEventListener('submit',async e=>{e.preventDefault();const r={};['nombre','numero','bosquejo','cancion','telefono'].forEach(k=>r[k]=$(k).value.trim());const b=buscarBosquejo(r.numero);if(b)r.bosquejo=b.nombre;const c=buscarCancion(r.cancion);if(c)r.cancion=`${c.numero} - ${c.nombre}`;if(!r.nombre)return;const i=$('indice').value;
+$('formulario').addEventListener('submit',async e=>{e.preventDefault();const r={};['nombre','numero','bosquejo','cancion','telefono'].forEach(k=>r[k]=$(k).value.trim());r.whatsapp_autorizado=$('whatsappAutorizado').checked;const b=buscarBosquejo(r.numero);if(b)r.bosquejo=b.nombre;const c=buscarCancion(r.cancion);if(c)r.cancion=`${c.numero} - ${c.nombre}`;if(!r.nombre)return;const i=$('indice').value;
  const normalizarNombre=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toLocaleLowerCase('es');
  const idActual=i===''?null:registros[Number(i)]?.id;const duplicado=registros.find(x=>normalizarNombre(x.nombre)===normalizarNombre(r.nombre)&&(idActual===null||String(x.id)!==String(idActual)));const telefonoNorm=v=>String(v||'').replace(/[^0-9]/g,'');const duplicadoTelefono=telefonoNorm(r.telefono).length>=7?registros.find(x=>telefonoNorm(x.telefono)===telefonoNorm(r.telefono)&&(idActual===null||String(x.id)!==String(idActual))):null;
  if(duplicado&&!confirm(`Ya existe un conferenciante con un nombre igual o muy parecido: "${duplicado.nombre}". ¿Deseas guardar de todas formas?`))return;if(duplicadoTelefono&&!confirm(`Este teléfono ya aparece registrado para "${duplicadoTelefono.nombre}". ¿Deseas guardar de todas formas?`))return;
@@ -741,6 +742,23 @@ function renderizarAsignaciones(){
  const lista=historialPersona.filter(a=>(!estado||a.estado===estado)&&[a.conferenciante_nombre,a.fecha,a.numero_bosquejo,a.nombre_bosquejo,a.cancion,a.estado,a.notas].some(v=>String(v||'').toLocaleLowerCase('es').includes(q)));
  $('filasAsignaciones').innerHTML=lista.length?lista.map(a=>`<tr><td>${esc(a.fecha||'—')}</td><td>${esc(a.conferenciante_nombre||'—')}</td><td>${esc([a.numero_bosquejo,a.nombre_bosquejo].filter(Boolean).join(' · ')||'—')}</td><td>${esc(a.cancion||'—')}</td><td><select class="estado-select" aria-label="Cambiar estado" onchange="actualizarEstadoAsignacion('${esc(String(a.id))}',this.value)">${['Programada','Realizada','Pendiente','Cancelada'].map(e=>`<option value="${e}" ${a.estado===e?'selected':''}>${e}</option>`).join('')}</select></td><td>${esc(a.notas||'—')}</td><td><button class="icon-btn delete" title="Eliminar asignación" onclick="eliminarAsignacion('${esc(String(a.id))}')">×</button></td></tr>`).join(''):`<tr><td colspan="7" class="empty">No hay asignaciones para estos filtros.</td></tr>`;
 }
+function generarIdAsignacion(){
+ if(window.crypto&&typeof window.crypto.randomUUID==='function')return window.crypto.randomUUID();
+ return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return (c==='x'?r:(r&0x3|0x8)).toString(16)});
+}
+async function solicitarRecordatorioWhatsApp(asignacionId){
+ try{
+  const {data,error}=await db.auth.getSession();
+  if(error||!data?.session?.access_token)return {ok:false,message:'No se encontró una sesión activa para solicitar el WhatsApp.'};
+  const response=await fetch('/.netlify/functions/whatsapp-asignacion',{
+   method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+data.session.access_token},
+   body:JSON.stringify({asignacion_id:asignacionId})
+  });
+  let result={};try{result=await response.json()}catch(_){}
+  if(!response.ok)return {ok:false,message:result.error||'No se pudo enviar el recordatorio por WhatsApp.'};
+  return {ok:true,message:result.message||'Recordatorio enviado por WhatsApp.'};
+ }catch(err){console.error('Error solicitando recordatorio WhatsApp:',err);return {ok:false,message:'La asignación se guardó, pero no se pudo contactar el servicio de WhatsApp.'}}
+}
 $('formAsignacion').addEventListener('submit',async e=>{
  e.preventDefault();
  if(!db){alert('La conexión con Supabase no está lista.');return}
@@ -749,11 +767,21 @@ $('formAsignacion').addEventListener('submit',async e=>{
  if(!persona){alert('Selecciona un conferenciante registrado.');return}
  const fecha=$('asigFecha').value, numero=$('asigNumero').value.trim(), cancionEntrada=$('asigCancion').value.trim();
  const b=buscarBosquejo(numero), c=buscarCancion(cancionEntrada);
- const asignacion={conferenciante_id:String(persona.id),conferenciante_nombre:persona.nombre||'',fecha,numero_bosquejo:numero,nombre_bosquejo:b?b.nombre:'',cancion:c?`${c.numero} - ${c.nombre}`:cancionEntrada,estado:$('asigEstado').value,notas:$('asigNotas').value.trim()};
+ const asignacion={id:generarIdAsignacion(),conferenciante_id:String(persona.id),conferenciante_nombre:persona.nombre||'',fecha,numero_bosquejo:numero,nombre_bosquejo:b?b.nombre:'',cancion:c?`${c.numero} - ${c.nombre}`:cancionEntrada,estado:$('asigEstado').value,notas:$('asigNotas').value.trim()};
  const duplicada=asignaciones.find(a=>String(a.conferenciante_id)===asignacion.conferenciante_id&&a.fecha===fecha&&a.estado!=='Cancelada'&&asignacion.estado!=='Cancelada');
  if(duplicada&&!confirm(`Este conferenciante ya tiene una asignación para ${fecha}. ¿Deseas guardar otra de todas formas?`))return;
- const res=await db.from('asignaciones').insert(asignacion);
- if(await persistirError(res)){limpiarFormularioAsignacion();await cargarDatos();alert('Asignación guardada correctamente.')}
+ const boton=$('formAsignacion').querySelector('button[type="submit"]');
+ if(boton?.disabled)return;if(boton){boton.disabled=true;boton.dataset.originalText=boton.textContent;boton.textContent='Guardando…'}
+ try{
+  const res=await db.from('asignaciones').insert(asignacion);
+  if(await persistirError(res)){
+   limpiarFormularioAsignacion();await cargarDatos();
+   if(asignacion.estado==='Cancelada'){alert('Asignación guardada. No se envió WhatsApp porque la asignación está cancelada.');return}
+   const aviso=await solicitarRecordatorioWhatsApp(asignacion.id);
+   if(aviso.ok)alert('Asignación guardada correctamente. '+aviso.message);
+   else alert('La asignación se guardó correctamente, pero el recordatorio por WhatsApp no se envió. '+aviso.message+' Revisa la configuración de WhatsApp y el teléfono/consentimiento del conferenciante.');
+  }
+ }catch(err){console.error('Error guardando asignación:',err);alert('No se pudo completar el guardado de la asignación. Revisa la conexión e inténtalo de nuevo.')}finally{if(boton){boton.disabled=false;boton.textContent=boton.dataset.originalText||'＋ Guardar asignación'}}
 });
 $('buscarAsignacion').addEventListener('input',renderizarAsignaciones);
 $('filtroPersonaHistorial').addEventListener('change',()=>{
