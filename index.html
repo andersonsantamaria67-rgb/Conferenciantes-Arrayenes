@@ -810,16 +810,32 @@ $('asigConferenciante').addEventListener('change',()=>{
  const persona=id?registros.find(r=>String(r.id)===String(id)):null;
  $('filtroPersonaHistorial').value=persona?normalizarDuplicado(persona.nombre):'';
  if(persona){
-  // Mostrar en el formulario el bosquejo y la canción registrados para esa persona.
-  const asignacionesPersona=asignaciones.filter(a=>String(a.conferenciante_id)===String(persona.id)||normalizarDuplicado(a.conferenciante_nombre)===normalizarDuplicado(persona.nombre)).sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
-  const ultima=asignacionesPersona.find(a=>a.estado!=='Cancelada');
-  const numero=String(ultima?.numero_bosquejo||persona.numero||'').trim();
-  const nombreBosquejo=String(ultima?.nombre_bosquejo||persona.bosquejo||'').trim();
-  const cancion=String(ultima?.cancion||persona.cancion||'').trim();
-  const b=buscarBosquejo(numero)||buscarBosquejo(nombreBosquejo);
-  $('asigNumero').value=numero?(b?`${b.numero} - ${b.nombre}`:(nombreBosquejo?`${numero} - ${nombreBosquejo}`:numero)):'';
-  const c=buscarCancion(cancion);
-  $('asigCancion').value=c?`${c.numero} - ${c.nombre}`:cancion;
+  // Un conferenciante puede tener varios registros en el directorio, cada uno con
+  // un bosquejo/canción diferente. No reducirlos al primer registro: conservar
+  // todos los datos únicos de esa persona y dejar el catálogo completo desplegable.
+  const nombreClave=normalizarDuplicado(persona.nombre);
+  const registrosPersona=registros.filter(r=>normalizarDuplicado(r.nombre)===nombreClave);
+  const asignacionesPersona=asignaciones.filter(a=>String(a.conferenciante_id)===String(persona.id)||normalizarDuplicado(a.conferenciante_nombre)===nombreClave)
+    .filter(a=>a.estado!=='Cancelada').sort((a,b)=>String(b.fecha||'').localeCompare(String(a.fecha||'')));
+  const bosquejosPersona=[...new Map([
+    ...registrosPersona.map(r=>({numero:String(r.numero||'').trim(),nombre:String(r.bosquejo||'').trim()})),
+    ...asignacionesPersona.map(a=>({numero:String(a.numero_bosquejo||'').trim(),nombre:String(a.nombre_bosquejo||'').trim()}))
+  ].filter(x=>x.numero||x.nombre).map(x=>[`${normalizarDuplicado(x.numero)}|${normalizarDuplicado(x.nombre)}`,x])).values()];
+  const cancionesPersona=[...new Set([
+    ...registrosPersona.map(r=>String(r.cancion||'').trim()),
+    ...asignacionesPersona.map(a=>String(a.cancion||'').trim())
+  ].filter(Boolean))];
+  // El primer dato registrado se muestra inicialmente; los demás quedan en la lista.
+  const primerBosquejo=bosquejosPersona[0];
+  const b=primerBosquejo?(buscarBosquejo(primerBosquejo.numero)||buscarBosquejo(primerBosquejo.nombre)):null;
+  $('asigNumero').value=primerBosquejo?(b?`${b.numero} - ${b.nombre}`:[primerBosquejo.numero,primerBosquejo.nombre].filter(Boolean).join(' - ')):'';
+  const primerCancion=cancionesPersona[0]||'';
+  const c=buscarCancion(primerCancion);
+  $('asigCancion').value=c?`${c.numero} - ${c.nombre}`:primerCancion;
+  // Hacer explícito que los datalist globales contienen todos los bosquejos/canciones,
+  // no solo el que se precarga al seleccionar la persona.
+  $('opcionesBosquejos').innerHTML=ordenar(bosquejos).map(x=>`<option value="${esc(String(x.numero)+' - '+String(x.nombre||''))}"></option>`).join('');
+  $('opcionesCanciones').innerHTML=ordenar(canciones).map(x=>`<option value="${esc(String(x.numero)+' - '+String(x.nombre||''))}"></option>`).join('');
  }else{$('asigNumero').value='';$('asigCancion').value=''}
  renderizarAsignaciones();
 });
