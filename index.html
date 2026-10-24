@@ -67,7 +67,7 @@ td{line-height:1.45}
 .login-card .field label{font-size:13px;color:#284b3b}
 .login-card .field input{width:100%;min-height:49px;border:1px solid #d5e2da;border-radius:13px;background:#fbfdfb;padding:12px 14px;transition:border-color .2s,box-shadow .2s}.login-card .field input:focus{outline:none;border-color:#33845e;box-shadow:0 0 0 4px #33845e1a;background:#fff}
 .login-submit{width:100%;min-height:49px;margin-top:5px;border-radius:13px;font-weight:700;letter-spacing:.1px;box-shadow:0 8px 18px #1c6b4824;transition:transform .18s,box-shadow .18s}.login-submit:hover{transform:translateY(-1px);box-shadow:0 12px 22px #1c6b4830}
-.passkey-login{width:100%;min-height:45px;margin-top:10px;background:#fff;color:#174b38;border:1px solid #b8d3c4;border-radius:12px;font-weight:650;cursor:pointer}.passkey-login:hover{background:#f0f7f2}.passkey-help{font-size:12px;color:#66796e;line-height:1.5;margin:10px 0 0}.passkey-setup-btn{border:1px solid #ffffff70;background:#ffffff18;color:#fff;border-radius:10px;padding:10px 13px;cursor:pointer}.passkey-setup-btn:hover{background:#ffffff2b}@media(max-width:600px){.passkey-setup-btn{padding:8px 10px}}
+
 .login-message{font-size:13px;line-height:1.5;color:#a52e2e;margin:12px 0 0;min-height:18px}
 .login-foot{font-size:11px;color:#87968d;text-align:center;margin-top:23px;padding-top:15px;border-top:1px solid #edf1ee}.catalog-header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.catalog-header-actions .btn-soft{white-space:nowrap}@media(max-width:600px){.catalog-header-actions{width:100%;align-items:stretch}.catalog-header-actions .btn-soft,.catalog-header-actions select{width:100%}}
 body:not(.authenticated) > header,body:not(.authenticated) > main,body:not(.authenticated) > footer,body:not(.authenticated) > dialog{display:none!important}
@@ -496,6 +496,18 @@ dialog{max-height:calc(100dvh - 24px);overscroll-behavior:contain}
 .history-summary-grid p{margin:0;overflow-wrap:anywhere;line-height:1.55}
 @media(max-width:600px){.history-summary-grid{grid-template-columns:1fr}.history-person-summary{padding:12px}}
 </style>
+
+<style id="arrayanes-notifications-style">
+#arrayanes-notice-stack{position:fixed;z-index:2147483000;top:20px;right:20px;width:min(420px,calc(100vw - 32px));display:flex;flex-direction:column;gap:12px;pointer-events:none;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.arrayanes-notice{pointer-events:auto;display:grid;grid-template-columns:42px minmax(0,1fr) 28px;gap:12px;align-items:start;background:#fff;border:1px solid #dce9e1;border-radius:16px;padding:15px 13px;box-shadow:0 16px 44px rgba(20,55,38,.18);color:#20382c;animation:arrayanesNoticeIn .22s ease-out;overflow:hidden;position:relative}
+.arrayanes-notice:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#25845b}.arrayanes-notice.is-error:before{background:#c94b4b}.arrayanes-notice.is-warning:before{background:#d89a28}.arrayanes-notice.is-success:before{background:#25845b}
+.arrayanes-notice-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#eaf6ef;color:#23764f;font-size:20px;font-weight:800}.is-error .arrayanes-notice-icon{background:#fff0ef;color:#b83f3f}.is-warning .arrayanes-notice-icon{background:#fff7e7;color:#9a6812}
+.arrayanes-notice-title{font-size:14px;font-weight:750;line-height:1.35;margin:1px 0 4px;color:#173d2b}.arrayanes-notice-message{font-size:13px;line-height:1.5;color:#53665b;overflow-wrap:anywhere;white-space:pre-wrap}.arrayanes-notice-close{border:0;background:transparent;color:#819087;border-radius:8px;width:28px;height:28px;font-size:20px;cursor:pointer;line-height:1}.arrayanes-notice-close:hover{background:#f0f5f1;color:#2a4938}.arrayanes-notice-bar{position:absolute;bottom:0;left:0;height:3px;background:#b8dfc7;animation:arrayanesNoticeProgress 6s linear forwards}.arrayanes-notice.is-error .arrayanes-notice-bar{background:#f2c3c0}.arrayanes-notice.is-warning .arrayanes-notice-bar{background:#f2d99d}
+@keyframes arrayanesNoticeIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}@keyframes arrayanesNoticeProgress{from{width:100%}to{width:0%}}
+@media(max-width:600px){#arrayanes-notice-stack{top:10px;right:10px;width:calc(100vw - 20px)}.arrayanes-notice{padding:12px;grid-template-columns:36px minmax(0,1fr) 26px;gap:9px}.arrayanes-notice-icon{width:36px;height:36px}}
+@media(prefers-reduced-motion:reduce){.arrayanes-notice,.arrayanes-notice-bar{animation:none}}
+</style>
+
 </head>
 <body>
 <section class="login-screen" id="loginScreen" aria-label="Acceso seguro">
@@ -507,10 +519,9 @@ dialog{max-height:calc(100dvh - 24px);overscroll-behavior:contain}
   <div class="field"><label for="loginEmail">Correo electrónico</label><input id="loginEmail" type="email" autocomplete="username webauthn" required maxlength="254" placeholder="tu correo autorizado"></div>
   <div class="field"><label for="loginPassword">Contraseña</label><input id="loginPassword" type="password" autocomplete="current-password" required maxlength="256" placeholder="Tu contraseña"></div>
   <button class="primary login-submit" id="loginSubmit" type="submit">Ingresar con correo y contraseña</button>
-  <button class="passkey-login" id="passkeyLogin" type="button">⌁ Ingresar con llave de acceso</button>
   <p class="passkey-help">Puedes usar una llave de acceso guardada en este dispositivo o en tu administrador de contraseñas. Para usarla por primera vez, primero inicia sesión con tu contraseña y crea la llave desde la aplicación.</p>
   <p class="login-message" id="loginMessage" role="alert" aria-live="polite"></p>
-  <p class="login-foot">Acceso restringido · Congregación Arrayanes</p>
+  <p class="login-foot">Acceso con correo electrónico y contraseña</p>
  </form>
 </section>
 <header class="hero">
@@ -546,7 +557,7 @@ dialog{max-height:calc(100dvh - 24px);overscroll-behavior:contain}
  <div class="panel-heading"><div><h2>Historial y control de asignaciones</h2><p>Registra conferencias programadas y consulta el historial por conferenciante.</p></div></div>
  <form id="formAsignacion" class="catalog-grid">
   <div class="field"><label for="asigConferenciante">Conferenciante *</label><select id="asigConferenciante" required><option value="">Selecciona una persona</option></select></div>
-  <div class="field"><label for="asigCongregacion">Congregación</label><input id="asigCongregacion" maxlength="150" placeholder="Nombre de la congregación"></div>
+  <div class="field"><label for="asigCongregacion">Congregación de destino</label><input id="asigCongregacion" maxlength="150" placeholder="Nombre de la congregación de destino"></div>
   <div class="field"><label for="asigFecha">Fecha de conferencia *</label><input id="asigFecha" type="date" required></div>
   <div class="field"><label for="asigNumero">N.º de bosquejo</label><select id="asigNumero" aria-label="Seleccionar bosquejo"><option value="">Selecciona un bosquejo</option></select><div class="hint">Selecciona una opción para ver el número y el nombre.</div></div>
   <div class="field"><label for="asigCancion">Canción</label><select id="asigCancion" aria-label="Seleccionar canción"><option value="">Selecciona una canción</option></select><div class="hint">Selecciona una opción para ver el número y el nombre.</div></div>
@@ -565,7 +576,7 @@ dialog{max-height:calc(100dvh - 24px);overscroll-behavior:contain}
 <dialog id="modal"><div class="modal-head"><h2 id="modalTitulo">Agregar conferenciante</h2><button class="close" onclick="cerrarModal()" aria-label="Cerrar">×</button></div>
 <form id="formulario" class="form-body"><input type="hidden" id="indice">
 <div class="field"><label for="nombre">Nombre del conferenciante *</label><input id="nombre" list="opcionesConferenciantes" required maxlength="120" placeholder="Escribe o selecciona el nombre"><datalist id="opcionesConferenciantes"></datalist><div class="hint">Si el conferenciante ya está registrado, puedes seleccionarlo y se completará su teléfono automáticamente.</div></div>
-<div class="field"><label for="numero">N.º de bosquejo</label><input id="numero" list="opcionesBosquejos" maxlength="30" placeholder="Escribe o selecciona el número"><datalist id="opcionesBosquejos"></datalist><div class="hint">El nombre del bosquejo se completará al ingresar un número registrado.</div></div>
+<div class="field"><label for="numero">N.º de bosquejo</label><input id="numero" list="opcionesBosquejos" inputmode="numeric" pattern="[0-9]*" maxlength="10" autocomplete="off" placeholder="Solo números"><datalist id="opcionesBosquejos"></datalist><div class="hint">El nombre del bosquejo se completará al ingresar un número registrado.</div></div>
 <div class="field"><label for="bosquejo">Nombre del bosquejo</label><input id="bosquejo" maxlength="200" placeholder="Se completa automáticamente"></div>
 <div class="field"><label for="cancion">Canción (número o nombre)</label><input id="cancion" list="opcionesCanciones" maxlength="120" placeholder="Escribe el número o nombre"><datalist id="opcionesCanciones"></datalist><div class="hint">Si escribes el número de una canción registrada, aparecerá su nombre.</div></div>
 <div class="field"><label for="telefono">Teléfono</label><input id="telefono" type="tel" maxlength="30" placeholder="Número de contacto"></div>
@@ -625,6 +636,12 @@ function ordenar(a, campo='numero'){
   return compararTexto(x[campo],y[campo]) || compararTexto(x.numero,y.numero);
  });
 }
+function nombreBosquejoLimpio(nombre, numero=''){
+ let t=String(nombre||'').trim().replace(/\s+/g,' ');
+ const n=String(numero||'').trim().replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+ if(n){ const re=new RegExp('^'+n+'\\s*(?:[-–—:.)]\\s*)+','i'); t=t.replace(re,'').trim(); }
+ return t;
+}
 function buscarBosquejo(n){const v=String(n||'').trim().toLowerCase();const primero=v.split(' - ')[0].trim();const todos=[...bosquejos,...registros.map(r=>({numero:r.numero,nombre:r.bosquejo})),...asignaciones.map(a=>({numero:a.numero_bosquejo,nombre:a.nombre_bosquejo}))];return todos.find(b=>String(b.numero||'').trim().toLowerCase()===v||String(b.numero||'').trim().toLowerCase()===primero)||todos.find(b=>String(b.nombre||'').trim().toLowerCase()===v)}
 function buscarCancion(n){const v=String(n||'').trim().toLowerCase();const primero=v.split(' - ')[0].trim();const todos=[...canciones,...registros.map(r=>{const m=String(r.cancion||'').match(/^\s*(.*?)\s*-\s*(.*)$/);return m?{numero:m[1],nombre:m[2]}:{numero:'',nombre:r.cancion}}),...asignaciones.map(a=>{const m=String(a.cancion||'').match(/^\s*(.*?)\s*-\s*(.*)$/);return m?{numero:m[1],nombre:m[2]}:{numero:'',nombre:a.cancion}})];return todos.find(c=>String(c.numero||'').trim().toLowerCase()===v||String(c.numero||'').trim().toLowerCase()===primero)||todos.find(c=>String(c.nombre||'').trim().toLowerCase()===v)}
 function opcionesUnicasBosquejos(){
@@ -660,18 +677,34 @@ function actualizarOpcionesBosquejosYCanciones(){
  renderSelectCatalogo('asigNumero',opcionesUnicasBosquejos(),'Selecciona un bosquejo');
  renderSelectCatalogo('asigCancion',opcionesUnicasCanciones(),'Selecciona una canción');
  const unicosB=opcionesUnicasBosquejos();
- $('opcionesBosquejos').innerHTML=unicosB.map(x=>`<option value="${esc([x.numero,x.nombre].filter(Boolean).join(' - '))}"></option>`).join('');
+ $('opcionesBosquejos').innerHTML=unicosB.filter(x=>/^\d+$/.test(String(x.numero||'').trim())).map(x=>`<option value="${esc(String(x.numero).trim())}" label="${esc(x.nombre||'')}"></option>`).join('');
  const unicosC=opcionesUnicasCanciones();
  $('opcionesCanciones').innerHTML=unicosC.map(x=>`<option value="${esc([x.numero,x.nombre].filter(Boolean).join(' - '))}"></option>`).join('');
 }
 async function cargarDatos(){
- const [r,b,c]=await Promise.all([db.from('conferenciantes').select('*').order('nombre'),db.from('bosquejos').select('*'),db.from('canciones').select('*')]);
- const err=r.error||b.error||c.error;if(err){console.error(err);alert('No se pudieron cargar los datos compartidos. Verifica las tablas y permisos de Supabase. Detalle: '+err.message);return}
- registros=r.data||[];bosquejos=b.data||[];canciones=c.data||[];paginaDirectorio=1;actualizarOpcionesBosquejosYCanciones();renderizar();
+ if(!db||!usuario)return;
+ // Cargar cada tabla por separado: un error en bosquejos o canciones no debe ocultar el directorio.
+ let r,b,c;
+ try{r=await db.from('conferenciantes').select('*');}
+ catch(e){console.error('Error consultando conferenciantes:',e);r={data:null,error:e};}
+ if(r?.error){
+  console.error('Error consultando conferenciantes:',r.error);
+  registros=[];paginaDirectorio=1;renderizar();
+  alert('No se pudieron consultar los conferenciantes en Supabase. Esto suele deberse a permisos de lectura (RLS) o a la conexión. Detalle: '+(r.error.message||String(r.error)));
+ }else{
+  registros=Array.isArray(r?.data)?r.data:[];
+  registros.sort((a,b)=>String(a.nombre||'').localeCompare(String(b.nombre||''),'es',{sensitivity:'base'}));
+  paginaDirectorio=1;renderizar();
+ }
+ try{b=await db.from('bosquejos').select('*');}catch(e){b={data:null,error:e};}
+ try{c=await db.from('canciones').select('*');}catch(e){c={data:null,error:e};}
+ if(b?.error){console.error('Error consultando bosquejos:',b.error);bosquejos=[];}else{bosquejos=b?.data||[];}
+ if(c?.error){console.error('Error consultando canciones:',c.error);canciones=[];}else{canciones=c?.data||[];}
+ actualizarOpcionesBosquejosYCanciones();renderizar();
  try{
   const a=await db.from('asignaciones').select('*').order('fecha',{ascending:false});
-  if(a.error){asignacionesDisponible=false;asignaciones=[];$('avisoAsignaciones').textContent='Para activar el historial, ejecuta el archivo Configuracion_asignaciones_Arrayanes.sql en el editor SQL de Supabase. El directorio y los catálogos siguen funcionando.';renderizarAsignaciones();}
-  else{asignacionesDisponible=true;asignaciones=a.data||[];$('avisoAsignaciones').textContent='Historial compartido guardado en Supabase.';renderizarAsignaciones();}
+  if(a.error){asignacionesDisponible=false;asignaciones=[];$('avisoAsignaciones').textContent='No se pudo cargar el historial. Verifica la tabla asignaciones y los permisos de Supabase.';renderizarAsignaciones();}
+  else{asignacionesDisponible=true;asignaciones=a.data||[];$('avisoAsignaciones').textContent='Historial de asignaciones guardado en Supabase.';renderizarAsignaciones();}
  }catch(e){asignacionesDisponible=false;asignaciones=[];renderizarAsignaciones();}
 }
 async function persistirError(res){if(res.error){console.error(res.error);alert('No se pudo guardar en la base de datos compartida: '+res.error.message);return false}return true}
@@ -695,7 +728,7 @@ function renderizar(){
  const totalPaginas=Math.max(1,Math.ceil(lista.length/filasPorPagina));if(paginaDirectorio>totalPaginas)paginaDirectorio=totalPaginas;if(paginaDirectorio<1)paginaDirectorio=1;
  const inicio=(paginaDirectorio-1)*filasPorPagina, paginaLista=lista.slice(inicio,inicio+filasPorPagina);
  $('contador').textContent=lista.length?`Mostrando ${inicio+1}–${Math.min(inicio+filasPorPagina,lista.length)} de ${lista.length} registros`:`Mostrando 0 de 0 registros`;
- $('filas').innerHTML=paginaLista.length?paginaLista.map((r)=>`<tr><td>${String(r.i+1).padStart(2,'0')}</td><td><div class="person"><span class="avatar">${esc(iniciales(r.nombre))}</span><span>${esc(r.nombre)}</span></div></td><td>${esc(r.telefono||'—')}</td><td><div>${esc(r.bosquejo||'—')}</div>${String(r.numero||'').trim()?`<small class="muted">N.º ${esc(r.numero)}</small>`:''}</td><td>${esc(r.cancion||'—')}</td><td><div class="actions"><button class="icon-btn edit" title="Editar" onclick="editarRegistro(${r.i})">✎</button><button class="icon-btn delete" title="Eliminar" onclick="eliminarRegistro(${r.i})">♲</button></div></td></tr>`).join(''):`<tr><td colspan="6" class="empty">🌿<br><br>${q?'No encontramos registros con esa búsqueda.':'Todavía no hay conferenciantes registrados.'}<br><br><button class="primary" onclick="nuevoRegistro()">＋ Agregar conferenciante</button></td></tr>`;
+ $('filas').innerHTML=paginaLista.length?paginaLista.map((r)=>`<tr><td>${String(r.i+1).padStart(2,'0')}</td><td><div class="person"><span class="avatar">${esc(iniciales(r.nombre))}</span><span>${esc(r.nombre)}</span></div></td><td>${esc(r.telefono||'—')}</td><td><div>${esc(nombreBosquejoLimpio(r.numero,r.bosquejo)||'—')}</div>${String(r.numero||'').trim()?`<small class="muted">N.º ${esc(r.numero)}</small>`:''}</td><td>${esc(r.cancion||'—')}</td><td><div class="actions"><button class="icon-btn edit" title="Editar" onclick="editarRegistro(${r.i})">✎</button><button class="icon-btn delete" title="Eliminar" onclick="eliminarRegistro(${r.i})">♲</button></div></td></tr>`).join(''):`<tr><td colspan="6" class="empty">🌿<br><br>${q?'No encontramos registros con esa búsqueda.':'Todavía no hay conferenciantes registrados.'}<br><br><button class="primary" onclick="nuevoRegistro()">＋ Agregar conferenciante</button></td></tr>`;
  const paginacion=$('paginacion');if(paginacion){let botones=`<button class="page-btn" ${paginaDirectorio===1?'disabled':''} onclick="cambiarPaginaDirectorio(${paginaDirectorio-1})" aria-label="Página anterior">‹</button>`;for(let n=1;n<=totalPaginas;n++){if(totalPaginas>7&&n>2&&n<totalPaginas-1&&Math.abs(n-paginaDirectorio)>1){if(n===3||n===totalPaginas-2)botones+=`<span>…</span>`;continue}botones+=`<button class="page-btn ${n===paginaDirectorio?'active':''}" onclick="cambiarPaginaDirectorio(${n})" aria-label="Página ${n}">${n}</button>`}botones+=`<button class="page-btn" ${paginaDirectorio===totalPaginas?'disabled':''} onclick="cambiarPaginaDirectorio(${paginaDirectorio+1})" aria-label="Página siguiente">›</button>`;paginacion.innerHTML=botones;}
  const ordenCatalogo=$('ordenCatalogo')?.value||'numero';
  const qb=($('buscarBosquejosCatalogo')?.value||'').trim().toLocaleLowerCase('es');
@@ -709,26 +742,55 @@ function renderizar(){
  $('listaBosquejos').innerHTML=paginaB.map(b=>`<tr><td>${esc(b.numero)}</td><td>${esc(b.nombre)}</td></tr>`).join('')||'<tr><td colspan="2" class="empty">No se encontraron bosquejos</td></tr>';
  $('listaCanciones').innerHTML=paginaC.map(c=>`<tr><td>${esc(c.numero)}</td><td>${esc(c.nombre)}</td></tr>`).join('')||'<tr><td colspan="2" class="empty">No se encontraron canciones</td></tr>';
  renderizarPaginacionCatalogo('b',listaBosquejosCatalogo.length,paginaBosquejosCatalogo,'contadorBosquejosCatalogo','paginacionBosquejosCatalogo');renderizarPaginacionCatalogo('c',listaCancionesCatalogo.length,paginaCancionesCatalogo,'contadorCancionesCatalogo','paginacionCancionesCatalogo');
- $('opcionesBosquejos').innerHTML=ordenar(bosquejos).map(b=>`<option value="${esc(String(b.numero)+' - '+String(b.nombre||''))}"></option>`).join('');$('opcionesCanciones').innerHTML=ordenar(canciones).map(c=>`<option value="${esc(String(c.numero)+' - '+String(c.nombre||''))}"></option>`).join('');$('opcionesConferenciantes').innerHTML=[...new Map(registros.filter(r=>String(r.nombre||'').trim()).map(r=>[String(r.nombre).trim().toLocaleLowerCase('es'),String(r.nombre).trim()])).values()].sort((a,b)=>a.localeCompare(b,'es')).map(n=>`<option value="${esc(n)}"></option>`).join('');renderizarAdmin();
+ $('opcionesBosquejos').innerHTML=ordenar(bosquejos).filter(b=>/^\d+$/.test(String(b.numero||'').trim())).map(b=>`<option value="${esc(String(b.numero).trim())}" label="${esc(b.nombre||'')}"></option>`).join('');$('opcionesCanciones').innerHTML=ordenar(canciones).map(c=>`<option value="${esc(String(c.numero)+' - '+String(c.nombre||''))}"></option>`).join('');$('opcionesConferenciantes').innerHTML=[...new Map(registros.filter(r=>String(r.nombre||'').trim()).map(r=>[String(r.nombre).trim().toLocaleLowerCase('es'),String(r.nombre).trim()])).values()].sort((a,b)=>a.localeCompare(b,'es')).map(n=>`<option value="${esc(n)}"></option>`).join('');renderizarAdmin();
 }
 function renderizarAdmin(){
  $('adminBosquejos').innerHTML=ordenar(bosquejos,'numero').map((b,i)=>`<tr><td>${esc(b.numero)}</td><td>${esc(b.nombre)}</td><td><button class="icon-btn delete" title="Eliminar bosquejo" onclick="eliminarCatalogo('b',${i})">×</button></td></tr>`).join('')||'<tr><td colspan="3" class="empty">Sin registros</td></tr>';
  $('adminCanciones').innerHTML=ordenar(canciones,'numero').map((c,i)=>`<tr><td>${esc(c.numero)}</td><td>${esc(c.nombre)}</td><td><button class="icon-btn delete" title="Eliminar canción" onclick="eliminarCatalogo('c',${i})">×</button></td></tr>`).join('')||'<tr><td colspan="3" class="empty">Sin registros</td></tr>';
 }
-function actualizarNombreBosquejo(){const b=buscarBosquejo($('numero').value);if(b)$('bosquejo').value=b.nombre}
+function nombreBosquejoLimpio(numero,nombre){let n=String(nombre||'').trim();const num=String(numero||'').trim();if(num){const pref=new RegExp('^'+num.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*[-–—:·]\\s*','i');n=n.replace(pref,'').trim()}return n} function actualizarNombreBosquejo(){const entrada=$('numero').value;const b=buscarBosquejo(entrada);if(b)$('bosquejo').value=nombreBosquejoLimpio(b.numero,b.nombre)}
 function actualizarNombreCancion(){const c=buscarCancion($('cancion').value);if(c)$('cancion').value=`${c.numero} - ${c.nombre}`}
 function buscarConferenciantePorNombre(nombre){const n=String(nombre||'').trim().toLocaleLowerCase('es');if(!n)return null;return registros.find(r=>String(r.nombre||'').trim().toLocaleLowerCase('es')===n)||null}
 function actualizarTelefonoConferenciante(){const r=buscarConferenciantePorNombre($('nombre').value);if(r&&String(r.telefono||'').trim())$('telefono').value=r.telefono}
 $('nombre').addEventListener('change',actualizarTelefonoConferenciante);$('nombre').addEventListener('input',()=>{const r=buscarConferenciantePorNombre($('nombre').value);if(r)actualizarTelefonoConferenciante()});
-$('numero').addEventListener('input',actualizarNombreBosquejo);$('numero').addEventListener('change',actualizarNombreBosquejo);$('cancion').addEventListener('change',actualizarNombreCancion);$('asigCancion').addEventListener('change',()=>{const c=buscarCancion($('asigCancion').value);if(c)$('asigCancion').value=`${c.numero} - ${c.nombre}`});
+$('numero').addEventListener('input',()=>{const campo=$('numero');campo.value=campo.value.replace(/\D/g,'');actualizarNombreBosquejo()});$('numero').addEventListener('change',actualizarNombreBosquejo);$('cancion').addEventListener('change',actualizarNombreCancion);$('asigCancion').addEventListener('change',()=>{const c=buscarCancion($('asigCancion').value);if(c)$('asigCancion').value=`${c.numero} - ${c.nombre}`});
 function nuevoRegistro(){$('formulario').reset();$('whatsappAutorizado').checked=false;$('indice').value='';$('modalTitulo').textContent='Agregar conferenciante';$('modal').showModal();$('nombre').focus()}
 function editarRegistro(i){const r=registros[i];if(!r)return;$('indice').value=i;$('modalTitulo').textContent='Editar conferenciante';['nombre','numero','bosquejo','cancion','telefono'].forEach(k=>$(k).value=r[k]||'');$('whatsappAutorizado').checked=r.whatsapp_autorizado===true;$('modal').showModal()}
 function cerrarModal(){$('modal').close()}
-$('formulario').addEventListener('submit',async e=>{e.preventDefault();const r={};['nombre','numero','bosquejo','cancion','telefono'].forEach(k=>r[k]=$(k).value.trim());r.whatsapp_autorizado=$('whatsappAutorizado').checked;const b=buscarBosquejo(r.numero);if(b)r.bosquejo=b.nombre;const c=buscarCancion(r.cancion);if(c)r.cancion=`${c.numero} - ${c.nombre}`;if(!r.nombre)return;const i=$('indice').value;
+$('formulario').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const boton=$('formulario').querySelector('button[type="submit"]');
+ if(!db){alert('No hay conexión con la base de datos. Recarga la página e inicia sesión nuevamente.');return;}
+ if(!usuario){alert('Tu sesión no está activa. Inicia sesión nuevamente antes de guardar.');return;}
+ const r={};['nombre','numero','bosquejo','cancion','telefono'].forEach(k=>r[k]=$(k).value.trim());
+ r.numero=r.numero.replace(/\D/g,'');
+ if($('numero').value.trim() && !r.numero){alert('Selecciona o escribe únicamente el número del bosquejo.');$('numero').focus();return;}
+ r.whatsapp_autorizado=$('whatsappAutorizado').checked;
+ const b=buscarBosquejo(r.numero);if(b)r.bosquejo=b.nombre;
+ const c=buscarCancion(r.cancion);if(c)r.cancion=`${c.numero} - ${c.nombre}`;
+ if(!r.nombre){alert('Escribe el nombre del conferenciante.');$('nombre').focus();return;}
+ const i=$('indice').value;
  const normalizarNombre=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toLocaleLowerCase('es');
- const idActual=i===''?null:registros[Number(i)]?.id;const duplicado=registros.find(x=>normalizarNombre(x.nombre)===normalizarNombre(r.nombre)&&(idActual===null||String(x.id)!==String(idActual)));const telefonoNorm=v=>String(v||'').replace(/[^0-9]/g,'');const duplicadoTelefono=telefonoNorm(r.telefono).length>=7?registros.find(x=>telefonoNorm(x.telefono)===telefonoNorm(r.telefono)&&(idActual===null||String(x.id)!==String(idActual))):null;
- if(duplicado&&!confirm(`Ya existe un conferenciante con un nombre igual o muy parecido: "${duplicado.nombre}". ¿Deseas guardar de todas formas?`))return;if(duplicadoTelefono&&!confirm(`Este teléfono ya aparece registrado para "${duplicadoTelefono.nombre}". ¿Deseas guardar de todas formas?`))return;
- let res;if(i==='')res=await db.from('conferenciantes').insert(r);else res=await db.from('conferenciantes').update(r).eq('id',registros[Number(i)].id);if(await persistirError(res)){await cargarDatos();cerrarModal()}});
+ const idActual=i===''?null:registros[Number(i)]?.id;
+ const duplicado=registros.find(x=>normalizarNombre(x.nombre)===normalizarNombre(r.nombre)&&(idActual===null||String(x.id)!==String(idActual)));
+ const telefonoNorm=v=>String(v||'').replace(/[^0-9]/g,'');
+ const duplicadoTelefono=telefonoNorm(r.telefono).length>=7?registros.find(x=>telefonoNorm(x.telefono)===telefonoNorm(r.telefono)&&(idActual===null||String(x.id)!==String(idActual))):null;
+ if(duplicado&&!confirm(`Ya existe un conferenciante con un nombre igual o muy parecido: "${duplicado.nombre}". ¿Deseas guardar de todas formas?`))return;
+ if(duplicadoTelefono&&!confirm(`Este teléfono ya aparece registrado para "${duplicadoTelefono.nombre}". ¿Deseas guardar de todas formas?`))return;
+ if(boton){boton.disabled=true;boton.dataset.originalText=boton.textContent;boton.textContent='Guardando…';}
+ try{
+  let res;
+  if(i==='')res=await db.from('conferenciantes').insert(r);
+  else {const registro=registros[Number(i)];if(!registro)throw new Error('No se encontró el registro que intentas editar. Cierra el formulario y vuelve a abrirlo.');res=await db.from('conferenciantes').update(r).eq('id',registro.id);}
+  if(res.error){console.error('Error guardando conferenciante:',res.error);alert('No se pudo guardar el conferenciante. Detalle: '+res.error.message+'\n\nSi el mensaje menciona permisos (RLS), revisa las políticas de la tabla conferenciantes en Supabase.');return;}
+  if($('buscar'))$('buscar').value='';
+  if($('filtro'))$('filtro').value='';
+  paginaDirectorio=1;
+  await cargarDatos();
+  cerrarModal();
+ }catch(err){console.error('Error inesperado guardando conferenciante:',err);alert('Ocurrió un error al guardar el conferenciante: '+(err?.message||String(err)));}
+ finally{if(boton){boton.disabled=false;boton.textContent=boton.dataset.originalText||'▣ Guardar registro';}}
+});
 async function eliminarRegistro(i){const r=registros[i];if(!r)return;if(confirm(`¿Deseas eliminar el registro de ${r.nombre}?`)){const res=await db.from('conferenciantes').delete().eq('id',r.id);if(await persistirError(res))await cargarDatos()}}
 function abrirCatalogos(){$('catalogoModal').showModal()}function cerrarCatalogos(){$('catalogoModal').close()}
 function normalizarDuplicado(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toLocaleLowerCase('es')}
@@ -747,7 +809,7 @@ function exportarCSV(){
    normalizarNombre(a.nombre).localeCompare(normalizarNombre(b.nombre),'es',{numeric:true,sensitivity:'base'})
    || String(a.numero||'').trim().localeCompare(String(b.numero||'').trim(),'es',{numeric:true,sensitivity:'base'})
    || String(a.bosquejo||'').trim().localeCompare(String(b.bosquejo||'').trim(),'es',{numeric:true,sensitivity:'base'})
- ).map(r=>[r.nombre||'',r.numero||'',r.bosquejo||'',r.cancion||'',r.telefono||'']);
+ ).map(r=>[r.nombre||'',r.numero||'',nombreBosquejoLimpio(r.numero,r.bosquejo),r.cancion||'',r.telefono||'']);
  const matriz=[['CONGREGACIÓN ARRAYANES | DIRECTORIO DE CONFERENCIANTES'],[`Listado de conferenciantes agregados · Generado el ${fecha}`],[],encabezados,...datos];
  const ws=XLSX.utils.aoa_to_sheet(matriz);
  ws['!cols']=[{wch:32},{wch:18},{wch:42},{wch:38},{wch:22}];
@@ -1013,17 +1075,7 @@ $('loginForm').addEventListener('submit',async e=>{
   mensajeLogin('No se pudo iniciar sesión. Verifica el correo y la contraseña o consulta al administrador.');
  }finally{$('loginSubmit').disabled=false;$('loginSubmit').textContent='Ingresar con correo y contraseña';}
 });
-$('passkeyLogin').addEventListener('click',async()=>{
- if(!db){mensajeLogin('No se pudo conectar con Supabase. Recarga la página e inténtalo de nuevo.');return;}
- if(!window.isSecureContext || !window.PublicKeyCredential){mensajeLogin('Las llaves de acceso requieren HTTPS y un navegador compatible. Puedes entrar con correo y contraseña.');return;}
- const boton=$('passkeyLogin');boton.disabled=true;boton.textContent='Verificando llave de acceso…';mensajeLogin('');
- try{
-  const {data,error}=await db.auth.signInWithPasskey();
-  if(error)throw error;
-  if(data.session)await cambiarEstadoSesion(data.session);
- }catch(err){console.error('Error de inicio con passkey:',err);mensajeLogin(explicarErrorPasskey(err));}
- finally{boton.disabled=false;boton.textContent='⌁ Ingresar con llave de acceso';}
-});
+
 if(configurado && window.supabase){
  db=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true,experimental:{passkey:true}}});
  db.auth.getSession().then(({data,error})=>{
@@ -1038,7 +1090,36 @@ if(configurado && window.supabase){
 $('buscar').addEventListener('input',renderizar);$('filtro').addEventListener('change',renderizar);
 // Los formularios no se cierran al hacer clic fuera del recuadro. Se cierran solo con sus botones explícitos.
 renderizar();
-</script></body></html>
+</script>
+<script id="arrayanes-notifications-script">
+(function(){
+  const originalAlert = window.alert ? window.alert.bind(window) : function(){};
+  function classify(message){
+    const m=String(message??'').toLocaleLowerCase('es');
+    if(/error|no se pudo|falló|fallo|incorrect|inválid|invalido|debes corregir|no fue posible|problema|rechazad/.test(m)) return {type:'error',title:'No se pudo completar'};
+    if(/atención|importante|verifica|debes|primero inicia|confirma|¿|requiere|no puedes|no se permite/.test(m)) return {type:'warning',title:'Revisa esta información'};
+    if(/éxito|exitosamente|guardad|actualizad|eliminad|cread|registrad|completad|correctamente|bienvenid|iniciada|iniciado|cerrada|cerrado/.test(m)) return {type:'success',title:'Operación completada'};
+    return {type:'info',title:'Información'};
+  }
+  function showNotice(message){
+    let stack=document.getElementById('arrayanes-notice-stack');
+    if(!stack){stack=document.createElement('div');stack.id='arrayanes-notice-stack';stack.setAttribute('aria-live','polite');stack.setAttribute('aria-relevant','additions');document.body.appendChild(stack);}
+    const kind=classify(message), card=document.createElement('section');card.className='arrayanes-notice is-'+kind.type;card.setAttribute('role',kind.type==='error'?'alert':'status');
+    const icon=kind.type==='error'?'!':kind.type==='warning'?'⚠':kind.type==='success'?'✓':'i';
+    const symbol=document.createElement('div');symbol.className='arrayanes-notice-icon';symbol.textContent=icon;
+    const content=document.createElement('div');const title=document.createElement('div');title.className='arrayanes-notice-title';title.textContent=kind.title;const body=document.createElement('div');body.className='arrayanes-notice-message';body.textContent=String(message??'');content.append(title,body);
+    const close=document.createElement('button');close.className='arrayanes-notice-close';close.type='button';close.setAttribute('aria-label','Cerrar mensaje');close.textContent='×';close.onclick=()=>card.remove();
+    const bar=document.createElement('div');bar.className='arrayanes-notice-bar';card.append(symbol,content,close,bar);stack.appendChild(card);
+    while(stack.children.length>5)stack.firstElementChild.remove();
+    const timeout=kind.type==='error'?9000:6500;const timer=setTimeout(()=>{card.style.opacity='0';card.style.transform='translateY(-5px)';setTimeout(()=>card.remove(),220)},timeout);
+    close.addEventListener('click',()=>clearTimeout(timer),{once:true});
+  }
+  window.alert=function(message){showNotice(message);};
+  window.arrayanesShowMessage=showNotice;
+})();
+</script>
+
+</body></html>
 <style>
 /* Encabezado más limpio: quitar el avatar decorativo y el botón con símbolo de llave del encabezado.
    La opción de passkey sigue disponible en la pantalla de acceso. */
@@ -1072,4 +1153,6 @@ renderizar();
 .login-foot{border-top:1px solid #e7eee9;color:#87978e;padding-top:18px;font-size:10px;letter-spacing:.4px}
 @media(max-width:600px){.login-screen{padding:18px;min-height:100svh}.login-card{padding:30px 22px;border-radius:25px}.login-brand{width:68px;height:68px;border-radius:22px}.login-card h1{font-size:28px}.login-card .login-subtitle{margin-bottom:25px}}
 @media(prefers-reduced-motion:reduce){.login-card{animation:none}.login-submit,.passkey-login{transition:none}}
+
+
 </style>
