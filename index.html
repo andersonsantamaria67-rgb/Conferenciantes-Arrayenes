@@ -705,9 +705,23 @@ async function cargarDatos(){
   const a=await db.from('asignaciones').select('*').order('fecha',{ascending:false});
   if(a.error){asignacionesDisponible=false;asignaciones=[];$('avisoAsignaciones').textContent='No se pudo cargar el historial. Verifica la tabla asignaciones y los permisos de Supabase.';renderizarAsignaciones();}
   else{asignacionesDisponible=true;asignaciones=a.data||[];$('avisoAsignaciones').textContent='Historial de asignaciones guardado en Supabase.';renderizarAsignaciones();}
- }catch(e){asignacionesDisponible=false;asignaciones=[];renderizarAsignaciones();}
+ }catch(e){
+  console.error('Excepción al consultar la tabla asignaciones:',e);
+  asignacionesDisponible=false;asignaciones=[];
+  const aviso=$('avisoAsignaciones');
+  if(aviso)aviso.textContent='No se pudo consultar la tabla asignaciones. Revisa la conexión, la estructura de la tabla y los permisos de Supabase.';
+  renderizarAsignaciones();
+ }
 }
-async function persistirError(res){if(res.error){console.error(res.error);alert('No se pudo guardar en la base de datos compartida: '+res.error.message);return false}return true}
+async function persistirError(res){
+ if(res?.error){
+  console.error('Error de Supabase al guardar asignación:',res.error);
+  const detalle=[res.error.message,res.error.details,res.error.hint,res.error.code].filter(Boolean).join(' | ');
+  alert('No se pudo guardar la asignación en Supabase. '+(detalle||'Error sin detalle devuelto por el servidor.'));
+  return false;
+ }
+ return true;
+}
 function cambiarPaginaDirectorio(pagina){paginaDirectorio=pagina;renderizar()}
 function cambiarPaginaCatalogo(tipo,pagina){if(tipo==='b')paginaBosquejosCatalogo=pagina;else paginaCancionesCatalogo=pagina;renderizar()}
 function renderizarPaginacionCatalogo(tipo,total,pagina,contadorId,paginacionId){const paginas=Math.max(1,Math.ceil(total/filasCatalogoPorPagina));const pag=Math.min(Math.max(1,pagina),paginas);if(tipo==='b')paginaBosquejosCatalogo=pag;else paginaCancionesCatalogo=pag;const desde=total?(pag-1)*filasCatalogoPorPagina+1:0,hasta=Math.min(pag*filasCatalogoPorPagina,total);$(contadorId).textContent=total?`Mostrando ${desde}–${hasta} de ${total}`:'0 registros';let html=`<button class="page-btn" ${pag===1?'disabled':''} onclick="cambiarPaginaCatalogo('${tipo}',${pag-1})" aria-label="Página anterior">‹</button>`;for(let n=1;n<=paginas;n++){if(paginas>5&&n>1&&n<paginas&&Math.abs(n-pag)>1){if(n===2||n===paginas-1)html+='<span>…</span>';continue}html+=`<button class="page-btn ${n===pag?'active':''}" onclick="cambiarPaginaCatalogo('${tipo}',${n})">${n}</button>`}html+=`<button class="page-btn" ${pag===paginas?'disabled':''} onclick="cambiarPaginaCatalogo('${tipo}',${pag+1})" aria-label="Página siguiente">›</button>`;$(paginacionId).innerHTML=html}
@@ -916,7 +930,7 @@ $('formAsignacion').addEventListener('submit',async e=>{
  }
  if(boton){boton.disabled=true;boton.dataset.originalText=boton.textContent;boton.textContent='Guardando…'}
  try{
-  const res=await db.from('asignaciones').insert(asignacion);
+  const res=await db.from('asignaciones').insert(asignacion).select().single();
   if(await persistirError(res)){
    await cargarDatos();
    if(asignacion.estado==='Cancelada'){
@@ -931,12 +945,14 @@ $('formAsignacion').addEventListener('submit',async e=>{
     alert('Asignación guardada correctamente. Se abrió WhatsApp con el mensaje listo para revisar y enviar. Recuerda pulsar Enviar en WhatsApp.');
    }else{
     if(pestanaWhatsApp&&!pestanaWhatsApp.closed)pestanaWhatsApp.close();
-    alert('La asignación se guardó correctamente, pero no se pudo preparar WhatsApp. '+enlace.message);
+    alert('ASIGNACIÓN GUARDADA. WhatsApp quedó pendiente. '+enlace.message+' No vuelvas a guardar la asignación, porque ya aparece en el historial.');
    }
   }else if(pestanaWhatsApp&&!pestanaWhatsApp.closed){pestanaWhatsApp.close();}
  }catch(err){
   if(pestanaWhatsApp&&!pestanaWhatsApp.closed)pestanaWhatsApp.close();
-  console.error('Error guardando asignación:',err);alert('No se pudo completar el guardado de la asignación. Revisa la conexión e inténtalo de nuevo.');
+  console.error('Error guardando asignación:',err);
+  const detalle=[err?.message,err?.details,err?.hint,err?.code].filter(Boolean).join(' | ');
+  alert('No se pudo completar el guardado de la asignación. '+(detalle||'Revisa la conexión, los permisos y la estructura de la tabla asignaciones en Supabase.'));
  }finally{if(boton){boton.disabled=false;boton.textContent=boton.dataset.originalText||'＋ Guardar asignación'}}
 });
 $('buscarAsignacion').addEventListener('input',renderizarAsignaciones);
@@ -1096,6 +1112,9 @@ renderizar();
   const originalAlert = window.alert ? window.alert.bind(window) : function(){};
   function classify(message){
     const m=String(message??'').toLocaleLowerCase('es');
+    // La asignación ya se guardó; solo queda pendiente preparar WhatsApp.
+    // Clasificarlo antes de buscar expresiones de error evita mostrar un falso fallo total.
+    if(m.includes('asignación guardada. whatsapp quedó pendiente')) return {type:'warning',title:'Asignación guardada · WhatsApp pendiente'};
     if(/error|no se pudo|falló|fallo|incorrect|inválid|invalido|debes corregir|no fue posible|problema|rechazad/.test(m)) return {type:'error',title:'No se pudo completar'};
     if(/atención|importante|verifica|debes|primero inicia|confirma|¿|requiere|no puedes|no se permite/.test(m)) return {type:'warning',title:'Revisa esta información'};
     if(/éxito|exitosamente|guardad|actualizad|eliminad|cread|registrad|completad|correctamente|bienvenid|iniciada|iniciado|cerrada|cerrado/.test(m)) return {type:'success',title:'Operación completada'};
